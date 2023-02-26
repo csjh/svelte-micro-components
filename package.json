@@ -1,7 +1,7 @@
 {
 	"name": "svelte-micro-components",
 	"version": "0.0.1",
-    "license": "MIT",
+	"license": "MIT",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
@@ -49,5 +49,8 @@
 	},
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"esm-env": "^1.0.0"
+	}
 }

@@ -9,6 +9,7 @@ import {
 	create_ssr_component,
 	escape
 } from 'svelte/internal';
+import { BROWSER } from 'esm-env';
 
 type Props = 'name';
 
@@ -19,7 +20,7 @@ export default function micro_component</*const*/ T extends Props>(
 	const convert = (fn: (propName: T) => string) =>
 		strings.map((s, i) => s + (propNames[i] ? fn(propNames[i]) : '')).join('');
 
-	if (typeof window === 'undefined') {
+	if (!BROWSER) {
 		return create_ssr_component((_: unknown, $$props: Record<T, any>) => {
 			return convert((propName: T) => escape($$props[propName]));
 		}) as any;
