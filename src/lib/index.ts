@@ -14,12 +14,12 @@ import { BROWSER } from 'esm-env';
 export default function micro_component<T extends string>(
 	strings: TemplateStringsArray,
 	...propNames: T[]
-): typeof SvelteComponentTyped<Record<T, any>> {
+): typeof SvelteComponentTyped<Record<T, string>> {
 	const convert = (fn: (propName: T) => string) =>
 		strings.map((s, i) => s + (propNames[i] ? fn(propNames[i]) : '')).join('');
 
 	if (!BROWSER) {
-		return create_ssr_component((_: unknown, $$props: Record<T, any>) => {
+		return create_ssr_component((_: unknown, $$props: Record<T, string>) => {
 			return convert((propName: T) => escape($$props[propName]));
 		}) as any;
 	}
@@ -28,12 +28,13 @@ export default function micro_component<T extends string>(
 	template.innerHTML = convert((propName) => `<template-${propName} />`);
 	const node = template.content.firstChild!;
 
-	function initialize(cmt: SvelteComponentTyped, props: Record<T, any>) {
+	function initialize(cmt: SvelteComponentTyped, props: Record<T, string>) {
 		cmt.$values = new Map<T, Text>();
 
 		cmt.$$ = {
 			on_mount: [],
 			after_update: [],
+            // @ts-expect-error other fields shouldn't matter
 			fragment: {
 				c: () => {
 					cmt.$template = node.cloneNode(true) as HTMLElement;
