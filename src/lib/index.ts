@@ -11,9 +11,7 @@ import {
 } from 'svelte/internal';
 import { BROWSER } from 'esm-env';
 
-type Props = 'name';
-
-export default function micro_component</*const*/ T extends Props>(
+export default function micro_component<T extends string>(
 	strings: TemplateStringsArray,
 	...propNames: T[]
 ): typeof SvelteComponentTyped<Record<T, any>> {
