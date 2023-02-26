@@ -1,60 +1,82 @@
-import type { SvelteComponent } from "svelte";
-import { SvelteComponentTyped, text, type ComponentConstructorOptions, insert_hydration, detach, noop, insert } from "svelte/internal";
+import type { SvelteComponentTyped } from 'svelte';
+import {
+	type ComponentConstructorOptions,
+	SvelteComponent,
+	text,
+	detach,
+	noop,
+	insert,
+	create_ssr_component,
+	escape
+} from 'svelte/internal';
 
-type Props = "name";
+type Props = 'name';
 
-export default function micro_component</*const*/T extends Props>(strings: TemplateStringsArray, ...propNames: T[]) {
-    const template = document.createElement("template");
-    template.innerHTML = strings.map((s, i) => s + (propNames[i] ? `<template-${propNames[i]} />` : "")).join("");
-    const node = template.content.firstChild!;
+export default function micro_component</*const*/ T extends Props>(
+	strings: TemplateStringsArray,
+	...propNames: T[]
+): typeof SvelteComponentTyped<Record<T, any>> {
+	const convert = (fn: (propName: T) => string) =>
+		strings.map((s, i) => s + (propNames[i] ? fn(propNames[i]) : '')).join('');
 
-    function initialize(cmt: SvelteComponent, props: Record<T, any>) {
-        cmt.$values = new Map<T, Text>();
+	if (typeof window === 'undefined') {
+		return create_ssr_component((_: unknown, $$props: Record<T, any>) => {
+			return convert((propName: T) => escape($$props[propName]));
+		}) as any;
+	}
 
-        cmt.$$ = {
-            on_mount: [],
-            after_update: [],
-            fragment: {
-                c: () => {
-                    console.log("creating")
-                    cmt.$template = (node.cloneNode(true) as HTMLElement);
-                    for (const propName of propNames) {
-                        cmt.$values.set(propName, text(props[propName]));
-                    }
-                },
-                m: (target, anchor) => {
-                    console.log(target, cmt.$template, anchor)
-                    // @ts-expect-error we know c is defined
-                    if (!cmt.$template) cmt.$$.fragment.c();
-                    insert(target, cmt.$template, anchor);
-                    for (const propName of propNames) {
-                        cmt.$template.querySelector(`template-${propName}`).replaceWith(cmt.$values.get(propName)!);
-                    }
-                },
-                l: noop,
-                p: noop,
-                i: noop,
-                o: noop,
-                d: (detaching) => {
-                    if (detaching) detach(cmt.$template);
-                }
-            }
-        };
-    
-        cmt.$$set = (props) => {
-            for (const propName of propNames) {
-                cmt.$values.get(propName).data = props[propName];
-            }
-        }
-    }
+	const template = document.createElement('template');
+	template.innerHTML = convert((propName) => `<template-${propName} />`);
+	const node = template.content.firstChild!;
 
-    return class extends SvelteComponentTyped<Record<T, any>> {
-        $template!: HTMLElement;
-        $values!: Map<T, Text>;
+	function initialize(cmt: SvelteComponentTyped, props: Record<T, any>) {
+		cmt.$values = new Map<T, Text>();
 
-        constructor(options: ComponentConstructorOptions) {
-            super(options);
-            initialize(this, options.props ?? {});
-        }
-    }
+		cmt.$$ = {
+			on_mount: [],
+			after_update: [],
+			fragment: {
+				c: () => {
+					cmt.$template = node.cloneNode(true) as HTMLElement;
+					for (const propName of propNames) {
+						cmt.$values.set(propName, text(props[propName]));
+					}
+				},
+				m: (target, anchor) => {
+					// @ts-expect-error we know c is defined
+                    // TODO: also side note no clue why this is needed should look into it
+					if (!cmt.$template) cmt.$$.fragment.c();
+					insert(target, cmt.$template, anchor);
+					for (const propName of propNames) {
+						cmt.$template
+							.querySelector(`template-${propName}`)
+							.replaceWith(cmt.$values.get(propName));
+					}
+				},
+				l: noop,
+				p: noop,
+				i: noop,
+				o: noop,
+				d: (detaching) => {
+					if (detaching) detach(cmt.$template);
+				}
+			}
+		};
+
+		cmt.$$set = (props) => {
+			for (const propName of propNames) {
+				cmt.$values.get(propName).data = props[propName];
+			}
+		};
+	}
+
+	return class extends SvelteComponent {
+		$template!: HTMLElement;
+		$values!: Map<T, Text>;
+
+		constructor({ props = {} }: ComponentConstructorOptions) {
+			super();
+			initialize(this as any, props);
+		}
+	} as any;
 }
