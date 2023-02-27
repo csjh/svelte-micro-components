@@ -8,7 +8,8 @@ import {
 	insert,
 	create_ssr_component,
 	escape,
-	element
+	element,
+    blank_object
 } from 'svelte/internal';
 import { BROWSER } from 'esm-env';
 
@@ -17,7 +18,7 @@ type Microcomponent<T extends string> = typeof SvelteComponentTyped<Record<T, st
 	SvelteComponentTyped<Record<T, string>> & { $$values: Record<T, Text>; $$nodes: Node[] };
 
 export default function micro_component<T extends string>(
-	strings: TemplateStringsArray,
+	{ raw: strings }: TemplateStringsArray,
 	...propNames: T[]
 ): Microcomponent<T> {
 	const convert = (fn: (propName: T) => string) =>
@@ -36,7 +37,10 @@ export default function micro_component<T extends string>(
 	function initialize(component: Microcomponent<T>, props: Record<T, string>) {
 		component.$$ = {
 			on_mount: [],
+            before_update: [],
 			after_update: [],
+            on_destroy: [],
+            callbacks: blank_object(),
 			// @ts-expect-error other fields shouldn't matter
 			fragment: {
 				c: () => {
@@ -56,6 +60,7 @@ export default function micro_component<T extends string>(
 						);
 					}
 
+                    // note: can insert all with Template.content, but then can't access nodes after insertion
 					component.$$nodes.forEach((node) => insert(target, node, anchor));
 				},
 				l: noop,
