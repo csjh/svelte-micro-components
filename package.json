@@ -1,7 +1,8 @@
 {
 	"name": "svelte-micro-components",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"license": "MIT",
+    "main": "dist/index",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
