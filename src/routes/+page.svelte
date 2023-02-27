@@ -1,9 +1,15 @@
 <script lang="ts">
-    import m from "$lib";
-
-    const Component = m`<h1>Welcome to your library project</h1>`
+    import "mvp.css";
 </script>
 
-<Component />
-<p>Create your package using @sveltejs/package and preview/showcase your work with SvelteKit</p>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<header>
+    <h1>Svelte Micro Components</h1>
+    <h3>For components who aren't worth their own file</h3>
+    <code>npm install svelte-micro-components</code>
+</header>
+<main>
+    <hr />
+    <section>
+
+    </section>
+</main>
