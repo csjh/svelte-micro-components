@@ -8,7 +8,7 @@ import {
 	insert,
 	create_ssr_component,
 	escape,
-    element
+	element
 } from 'svelte/internal';
 import { BROWSER } from 'esm-env';
 
@@ -29,7 +29,10 @@ export default function micro_component<T extends string>(
 	template.innerHTML = convert((propName) => `<template-${propName} />`);
 	const node = template.content;
 
-	function initialize(cmt: SvelteComponentTyped<Record<T, string>> & { $$values: Record<T, Text>, $$nodes: Node[] }, props: Record<T, string>) {
+	function initialize(
+		cmt: SvelteComponentTyped<Record<T, string>> & { $$values: Record<T, Text>; $$nodes: Node[] },
+		props: Record<T, string>
+	) {
 		cmt.$$ = {
 			on_mount: [],
 			after_update: [],
@@ -46,14 +49,13 @@ export default function micro_component<T extends string>(
 					// TODO: also side note no clue why this is needed should look into it
 					if (!cmt.$$template) cmt.$$.fragment.c();
 
-                    for (const propName of propNames) {
-						cmt.$$nodes[0]!
-                            .parentNode!
-							.querySelector(`template-${propName}`)!
-							.replaceWith(cmt.$$values[propName]);
+					for (const propName of propNames) {
+						cmt.$$nodes[0]!.parentNode!.querySelector(`template-${propName}`)!.replaceWith(
+							cmt.$$values[propName]
+						);
 					}
 
-					cmt.$$nodes.forEach(node => insert(target, node, anchor));
+					cmt.$$nodes.forEach((node) => insert(target, node, anchor));
 				},
 				l: noop,
 				p: noop,
