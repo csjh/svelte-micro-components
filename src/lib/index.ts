@@ -27,16 +27,16 @@ export default function micro_component<T extends string>(
 
 	const template = element('template');
 	template.innerHTML = convert((propName) => `<template-${propName} />`);
-	const node = template.content.firstChild!;
+	const node = template.content;
 
-	function initialize(cmt: SvelteComponentTyped<Record<T, string>> & { $$values: Record<T, Text>, $$template: HTMLElement }, props: Record<T, string>) {
+	function initialize(cmt: SvelteComponentTyped<Record<T, string>> & { $$values: Record<T, Text>, $$nodes: Node[] }, props: Record<T, string>) {
 		cmt.$$ = {
 			on_mount: [],
 			after_update: [],
 			// @ts-expect-error other fields shouldn't matter
 			fragment: {
 				c: () => {
-					cmt.$$template = node.cloneNode(true) as HTMLElement;
+					cmt.$$nodes = Array.from((node.cloneNode(true) as HTMLElement).children).reverse();
 					for (const propName of propNames) {
 						cmt.$$values[propName] = text(props[propName]);
 					}
@@ -44,20 +44,23 @@ export default function micro_component<T extends string>(
 				m: (target, anchor) => {
 					// @ts-expect-error we know c is defined
 					// TODO: also side note no clue why this is needed should look into it
-					if (!cmt.$template) cmt.$$.fragment.c();
-					insert(target, cmt.$template, anchor);
-					for (const propName of propNames) {
-						cmt.$$template
+					if (!cmt.$$template) cmt.$$.fragment.c();
+
+                    for (const propName of propNames) {
+						cmt.$$nodes[0]!
+                            .parentNode!
 							.querySelector(`template-${propName}`)!
 							.replaceWith(cmt.$$values[propName]);
 					}
+
+					cmt.$$nodes.forEach(node => insert(target, node, anchor));
 				},
 				l: noop,
 				p: noop,
 				i: noop,
 				o: noop,
 				d: (detaching) => {
-					if (detaching) detach(cmt.$template);
+					if (detaching) cmt.$$nodes.forEach(detach);
 				}
 			}
 		};
@@ -70,7 +73,7 @@ export default function micro_component<T extends string>(
 	}
 
 	return class extends SvelteComponent {
-		$$template!: HTMLElement;
+		$$nodes: Node[] = [];
 		$$values = {} as unknown as Record<T, Text>;
 
 		constructor({ props = {} }: ComponentConstructorOptions) {
