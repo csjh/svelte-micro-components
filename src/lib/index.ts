@@ -34,7 +34,7 @@ export default function micro_component<T extends string>(
 		cmt.$$ = {
 			on_mount: [],
 			after_update: [],
-            // @ts-expect-error other fields shouldn't matter
+			// @ts-expect-error other fields shouldn't matter
 			fragment: {
 				c: () => {
 					cmt.$template = node.cloneNode(true) as HTMLElement;
@@ -44,7 +44,7 @@ export default function micro_component<T extends string>(
 				},
 				m: (target, anchor) => {
 					// @ts-expect-error we know c is defined
-                    // TODO: also side note no clue why this is needed should look into it
+					// TODO: also side note no clue why this is needed should look into it
 					if (!cmt.$template) cmt.$$.fragment.c();
 					insert(target, cmt.$template, anchor);
 					for (const propName of propNames) {
