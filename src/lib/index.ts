@@ -7,7 +7,8 @@ import {
 	noop,
 	insert,
 	create_ssr_component,
-	escape
+	escape,
+    element
 } from 'svelte/internal';
 import { BROWSER } from 'esm-env';
 
@@ -24,22 +25,20 @@ export default function micro_component<T extends string>(
 		}) as any;
 	}
 
-	const template = document.createElement('template');
+	const template = element('template');
 	template.innerHTML = convert((propName) => `<template-${propName} />`);
 	const node = template.content.firstChild!;
 
-	function initialize(cmt: SvelteComponentTyped, props: Record<T, string>) {
-		cmt.$values = new Map<T, Text>();
-
+	function initialize(cmt: SvelteComponentTyped<Record<T, string>> & { $$values: Record<T, Text>, $$template: HTMLElement }, props: Record<T, string>) {
 		cmt.$$ = {
 			on_mount: [],
 			after_update: [],
 			// @ts-expect-error other fields shouldn't matter
 			fragment: {
 				c: () => {
-					cmt.$template = node.cloneNode(true) as HTMLElement;
+					cmt.$$template = node.cloneNode(true) as HTMLElement;
 					for (const propName of propNames) {
-						cmt.$values.set(propName, text(props[propName]));
+						cmt.$$values[propName] = text(props[propName]);
 					}
 				},
 				m: (target, anchor) => {
@@ -48,9 +47,9 @@ export default function micro_component<T extends string>(
 					if (!cmt.$template) cmt.$$.fragment.c();
 					insert(target, cmt.$template, anchor);
 					for (const propName of propNames) {
-						cmt.$template
-							.querySelector(`template-${propName}`)
-							.replaceWith(cmt.$values.get(propName));
+						cmt.$$template
+							.querySelector(`template-${propName}`)!
+							.replaceWith(cmt.$$values[propName]);
 					}
 				},
 				l: noop,
@@ -65,14 +64,14 @@ export default function micro_component<T extends string>(
 
 		cmt.$$set = (props) => {
 			for (const propName of propNames) {
-				cmt.$values.get(propName).data = props[propName];
+				cmt.$$values[propName].data = props[propName];
 			}
 		};
 	}
 
 	return class extends SvelteComponent {
-		$template!: HTMLElement;
-		$values!: Map<T, Text>;
+		$$template!: HTMLElement;
+		$$values = {} as unknown as Record<T, Text>;
 
 		constructor({ props = {} }: ComponentConstructorOptions) {
 			super();
