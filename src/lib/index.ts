@@ -10,7 +10,8 @@ import {
 	escape,
 	element,
 	blank_object,
-	children
+	children,
+    attr
 } from 'svelte/internal';
 import { BROWSER } from 'esm-env';
 
@@ -57,10 +58,7 @@ export default function micro_component<T extends string>(
 	const node = template.content;
 
 	function initialize(component: Microcomponent<T>, props: Record<T, string>) {
-		const values: {
-			attr: Record<T, Attr>;
-			text: Record<T, Text>;
-		} = { attr: blank_object(), text: blank_object() };
+		const values: Record<T, Attr | Text> = blank_object();
 
 		let nodes: ChildNode[];
 
@@ -75,12 +73,12 @@ export default function micro_component<T extends string>(
 				c: () => {
 					nodes = children(node.cloneNode(true) as HTMLElement);
 					for (const propName of categorized.text) {
-						values.text[propName] = text(props[propName]);
+						values[propName] = text(props[propName]);
 					}
 					for (const propName of categorized.attr) {
 						const attr = document.createAttribute(classes[propName]);
 						attr.value = props[propName];
-						values.attr[propName] = attr;
+						values[propName] = attr;
 					}
 				},
 				m: (target, anchor) => {
@@ -90,12 +88,12 @@ export default function micro_component<T extends string>(
 
 					const parent = nodes[0]!.parentNode!;
 					for (const propName of categorized.text) {
-						parent.querySelector(`template-${propName}`)!.replaceWith(values.text[propName]);
+						parent.querySelector(`template-${propName}`)!.replaceWith(values[propName]);
 					}
 					for (const propName of categorized.attr) {
 						const el = parent.querySelector(`[data-${propName}]`)!;
-						el.removeAttribute(`data-${propName}`);
-						el.setAttributeNode(values.attr[propName]);
+						attr(el, `data-${propName}`);
+						el.setAttributeNode(values[propName] as Attr);
 					}
 
 					// note: can insert all with Template.content, but then can't access nodes after insertion
@@ -113,8 +111,7 @@ export default function micro_component<T extends string>(
 
 		component.$$set = (props: Record<T, string>) => {
 			for (const prop in props) {
-				if (categorized.attr.has(prop)) values.attr[prop].nodeValue = props[prop];
-				else if (categorized.text.has(prop)) values.text[prop].data = props[prop];
+				values[prop].nodeValue = props[prop];
 			}
 		};
 	}
