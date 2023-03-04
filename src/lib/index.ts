@@ -27,7 +27,12 @@ export function on<T extends keyof Events>(_: TemplateStringsArray, eventName: T
     return ["on", eventName, alias ?? eventName];
 }
 
-export default function micro_component<T extends string>(
+// use:action={params}
+// use`${action}=${params}`
+export function use<Element = HTMLElement, Parameter = any, Attributes extends Record<string, any> = Record<never, any>>(_: TemplateStringsArray, action: Action<Element, Parameter, Attributes>, params?: Parameter): UseDirective {
+    return ["use", action, params];
+}
+
 export default function micro_component<Props extends readonly Prop[]>(
 	{ raw: strings }: TemplateStringsArray,
 	...propNames: Props

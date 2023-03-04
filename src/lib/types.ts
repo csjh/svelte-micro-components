@@ -5,6 +5,8 @@ import type { SvelteComponentTyped } from "svelte";
 export { Action };
 export type OnDirective<T extends keyof Events = keyof Events> = ["on", T, string];
 export type UseDirective = ["use", Action, unknown?];
+type BindDirective = ["bind", string, unknown?];
+export type Directive = OnDirective;
 
 export type Prop = string | Directive;
 
