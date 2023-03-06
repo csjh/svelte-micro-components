@@ -1,4 +1,3 @@
-import type { SvelteComponentTyped } from 'svelte';
 import {
 	type ComponentConstructorOptions,
 	SvelteComponent,
@@ -14,7 +13,8 @@ import {
 	attr,
 	bubble,
 	listen,
-	run_all
+	run_all,
+    action_destroyer
 } from 'svelte/internal';
 import type {
 	Events,
@@ -26,11 +26,12 @@ import type {
 	Microcomponent
 } from './types';
 import { BROWSER } from 'esm-env';
+import type { ActionReturn } from 'svelte/action';
 
 const isDirective = (value: unknown): value is Directive => Array.isArray(value);
 
 // on:eventname
-// on`${eventName}` or on`${eventname}=${}`
+// on`${eventName}` or on`${eventname}=${bubbleUpName}`
 export function on<T extends keyof Events>(
 	_: TemplateStringsArray,
 	eventName: T,
@@ -40,17 +41,13 @@ export function on<T extends keyof Events>(
 }
 
 // use:action={params}
-// use`${action}=${params}`
-export function use<
-	Element = HTMLElement,
-	Parameter = any,
-	Attributes extends Record<string, any> = Record<never, any>
->(
+// use`${action}=${"nameOfParamsProps"}` | <Component nameOfParamsProps={} />
+export function use<ParameterPropName extends string, SuppliedAction extends Action>(
 	_: TemplateStringsArray,
-	action: Action<Element, Parameter, Attributes>,
-	params?: Parameter
-): UseDirective {
-	return ['use', action, params];
+	action: SuppliedAction,
+	parameterPropName: ParameterPropName
+): UseDirective<ParameterPropName, SuppliedAction> {
+	return ['use', action, parameterPropName];
 }
 
 export default function micro_component<Props extends readonly Prop[]>(
@@ -75,13 +72,15 @@ export default function micro_component<Props extends readonly Prop[]>(
 		}) as any;
 	}
 
-	const categorized: { attr: Set<StringProps>; text: Set<StringProps>; events: Set<OnDirective> } =
-		{ attr: new Set(), text: new Set(), events: new Set() };
+	const categorized: { attr: Set<StringProps>; text: Set<StringProps>; events: Set<OnDirective>; actions: Set<UseDirective<string | unknown>> } =
+		{ attr: new Set(), text: new Set(), events: new Set(), actions: new Set() };
 	propNames.forEach((propName, i) => {
 		if (isDirective(propName)) {
 			if (propName[0] === 'on') {
 				categorized.events.add(propName);
-			}
+			} else if (propName[0] === 'use') {
+                categorized.actions.add(propName);
+            }
 		} else {
 			if (strings[i].at(-1) === '=') {
 				categorized.attr.add(propName);
@@ -94,9 +93,13 @@ export default function micro_component<Props extends readonly Prop[]>(
 	const classes = {} as Record<StringProps, string>;
 	function classify(propName: T, previousString: string) {
 		if (isDirective(propName)) {
-			return previousString + ` data-${propName[1]}-${propName[2]} `;
+            if (propName[0] === 'on') {
+			    return previousString + ` data-${propName[1]}-${propName[2]} `;
+            } else /*if (propName[0] === 'use')*/ {
+                return previousString + ` data-action-${propName[1].name} `;
+            }
 		} else {
-			if (previousString.at(-1) !== '=') return previousString + `<template-${propName} />`;
+			if (previousString.at(-1) !== '=') return previousString + `<template-${propName}></template-${propName}>`;
 			const start = previousString.lastIndexOf(' ');
 			classes[propName] = previousString.slice(start + 1, -1);
 			return previousString.slice(0, start) + ` data-${propName} `;
@@ -109,9 +112,10 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 	function initialize(component: Microcomponent<T>, props: Record<StringProps, string>) {
 		const values: Record<StringProps, Attr | Text> = blank_object();
+        const actions: Record<string, ActionReturn["update"]> = blank_object();
 
 		let nodes: ChildNode[];
-		let dispose: (() => void)[] = [];
+		let dispose: Function[] = [];
 		let mounted = false;
 
 		component.$$ = {
@@ -141,6 +145,8 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 					const parent = nodes[0]!.parentNode!;
 					for (const propName of categorized.text) {
+                        console.log(parent.children[0])
+                        console.log(parent.cloneNode(true))
 						parent.querySelector(`template-${propName}`)!.replaceWith(values[propName]);
 					}
 					for (const propName of categorized.attr) {
@@ -157,6 +163,12 @@ export default function micro_component<Props extends readonly Prop[]>(
 								})
 							);
 						}
+                        for (const action of categorized.actions) {
+                            const el = parent.querySelector(`[data-action-${action[1].name}]`)! as HTMLElement;
+                            const action_result = action[1](el, props[action[2] as string]);
+                            if(action_result?.update) actions[(action as UseDirective<string>)[2]] = action_result.update;
+                            dispose.push(action_destroyer(action_result?.destroy));
+                        }
 						mounted = true;
 					}
 
@@ -177,7 +189,8 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 		component.$$set = (props: Record<StringProps, string>) => {
 			for (const prop in props) {
-				values[prop].nodeValue = props[prop];
+				if(prop in values) values[prop].nodeValue = props[prop];
+                if(prop in actions) actions[prop]!(props[prop]);
 			}
 		};
 	}

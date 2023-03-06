@@ -20,19 +20,19 @@ import type { SvelteComponentTyped } from 'svelte';
 
 export { Action };
 export type OnDirective<T extends keyof Events = keyof Events> = ['on', T, string];
-export type UseDirective = ['use', Action, unknown?];
+export type UseDirective<T extends string | unknown, UserAction extends Action = Action> = ['use', UserAction, T];
 type BindDirective = ['bind', string, unknown?];
-export type Directive = OnDirective;
+export type Directive = OnDirective | UseDirective<string | unknown>;
 
 export type Prop = string | Directive;
 
 // unholy type declaration, should fix
 export type Microcomponent<T extends Prop> = typeof SvelteComponentTyped<
-	Extract<T, string> extends never ? never : Record<Extract<T, string>, string>,
+	({ [K in Extract<T, UseDirective<string>>[2]]: Parameters<Extract<T, UseDirective<string>>[1]>[1] }) & (Extract<T, string> extends never ? never : Record<Extract<T, string>, string>),
 	{ [K in Extract<T, OnDirective>[1]]: Parameters<Events[K]> }
 > &
 	SvelteComponentTyped<
-		Extract<T, string> extends never ? never : Record<Extract<T, string>, string>,
+        ({ [K in Extract<T, UseDirective<string>>[2]]: Parameters<Extract<T, UseDirective<string>>[1]>[1] }) & (Extract<T, string> extends never ? never : Record<Extract<T, string>, string>),
 		{ [K in Extract<T, OnDirective>[1]]: Parameters<Events[K]> }
 	>;
 
