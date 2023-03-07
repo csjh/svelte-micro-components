@@ -20,21 +20,40 @@ import type { SvelteComponentTyped } from 'svelte';
 
 export { Action };
 export type OnDirective<T extends keyof Events = keyof Events> = ['on', T, string];
-export type UseDirective<T extends string | unknown, UserAction extends Action = Action> = ['use', UserAction, T];
+export type UseDirective<T extends string | unknown, UserAction extends Action = Action> = [
+	'use',
+	UserAction,
+	T
+];
 type BindDirective = ['bind', string, unknown?];
 export type Directive = OnDirective | UseDirective<string | unknown>;
 
 export type Prop = string | Directive;
 
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+	? I
+	: never;
+type KeyValuePairToObject<T> = T extends UseDirective<string>
+	? { [K in T[2]]: Parameters<T[1]>[1] }
+	: {};
+type ExtractUseProps<T extends readonly Prop[]> = UnionToIntersection<
+	KeyValuePairToObject<T[number]>
+>;
+
+type ExtractProps<T extends readonly Prop[]> = Extract<T[number], string> extends never
+	? {}
+	: { [K in Extract<T[number], string>]: string };
+
+type ExtractEvents<T extends readonly Prop[]> = {
+	[K in Extract<T[number], OnDirective>[1]]: Parameters<Events[K]>;
+};
+
 // unholy type declaration, should fix
-export type Microcomponent<T extends Prop> = typeof SvelteComponentTyped<
-	({ [K in Extract<T, UseDirective<string>>[2]]: Parameters<Extract<T, UseDirective<string>>[1]>[1] }) & (Extract<T, string> extends never ? never : Record<Extract<T, string>, string>),
-	{ [K in Extract<T, OnDirective>[1]]: Parameters<Events[K]> }
+export type MicroComponent<T extends readonly Prop[]> = typeof SvelteComponentTyped<
+	ExtractUseProps<T> & ExtractProps<T>,
+	ExtractEvents<T>
 > &
-	SvelteComponentTyped<
-        ({ [K in Extract<T, UseDirective<string>>[2]]: Parameters<Extract<T, UseDirective<string>>[1]>[1] }) & (Extract<T, string> extends never ? never : Record<Extract<T, string>, string>),
-		{ [K in Extract<T, OnDirective>[1]]: Parameters<Events[K]> }
-	>;
+	SvelteComponentTyped<ExtractUseProps<T> & ExtractProps<T>, ExtractEvents<T>>;
 
 export interface Events {
 	// Clipboard Events
