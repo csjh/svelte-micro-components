@@ -1,42 +1,42 @@
 <script lang="ts">
 	import 'mvp.css';
 	import m, { on, use } from '$lib';
-    import type { Action } from 'svelte/action';
+	import type { Action } from 'svelte/action';
 
-    const colorNode: Action<HTMLDivElement, string> = (node, color = "blue") => {
-        node.style.color = color;
+    const clickHandler = (e: MouseEvent) => {
+        navigator.clipboard.writeText("npm install svelte-micro-components");
+    }
 
+    const gradient: Action<HTMLElement, [number, number, number]> = (node, val = [0,0,0]) => {
+        const hexify = (val: number) => Math.round(val % 255).toString(16).padStart(2, "0");
+        node.style.color = `#${hexify(val[0])}${hexify(val[1])}${hexify(val[2])}`;
         return {
-            update(newColor) {
-                node.style.color = newColor;
+            update(parameter) {
+                node.style.color = `#${hexify(parameter[0])}${hexify(parameter[1])}${hexify(parameter[2])}`;
             },
-            destroy() {
-                node.style.color = "";
-            }
         }
     }
 
 	const Header = m`
         <header>
             <h1>Svelte Micro Components</h1>
-            <p>For components who aren't worth their own file</p>
-            <code ${use`${colorNode}=${"myColor"}`} ${on`${'click'}`}>${'random'} svelte-micro-components</code>
-            <p></p>
+            <p style=${"style"}>${"header"}</p>
+            <code ${on`${"click"}`}>npm install svelte-micro-components</code>
+            <p ${use`${gradient}=${"gradient"}`}>Disco</p>
         </header>
     `;
 
-	let random = Math.random().toString();
-	setInterval(() => (random = Math.random().toString()), 100);
+    let rgb: [number, number, number] = [0,0,0];
+    setInterval(() => rgb = [Math.random() * 255, Math.random() * 255, Math.random() * 255], 100);
 
-	let myClass = Math.random().toString();
-	setInterval(() => (myClass = Math.random().toString()), 100);
-
-    const colors = ["red", "blue", "green", "yellow", "orange", "purple", "pink", "black", "white", "gray"];
-    let myColor = colors[Math.floor(Math.random() * colors.length)];
-    setInterval(() => (myColor = colors[Math.floor(Math.random() * colors.length)]), 100);
+    let header = "For components that aren't worth their own file";
+    const headers = ["For components that aren't worth their own file", "A micro library for micro components", "Small, high performance components for Svelte"];
+    setInterval(() => {
+        header = headers[Math.floor(Math.random() * headers.length)];
+    }, 2000);
 </script>
 
-<Header {random} on:click={(e) => console.log(e)} {myColor} />
+<Header style={"font-style: italic"} {header} gradient={rgb} on:click={clickHandler} />
 
 <main>
 	<hr />

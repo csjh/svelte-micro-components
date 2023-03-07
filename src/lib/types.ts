@@ -45,7 +45,7 @@ type ExtractProps<T extends readonly Prop[]> = Extract<T[number], string> extend
 	: { [K in Extract<T[number], string>]: string };
 
 type ExtractEvents<T extends readonly Prop[]> = {
-	[K in Extract<T[number], OnDirective>[1]]: Parameters<Events[K]>;
+	[K in Extract<T[number], OnDirective>[1]]: Parameters<Events[K]>[0];
 };
 
 // unholy type declaration, should fix
