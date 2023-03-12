@@ -1,8 +1,7 @@
 {
 	"name": "svelte-micro-components",
-	"version": "0.4.0",
+	"version": "0.4.1",
 	"license": "MIT",
-	"main": "dist/index.js",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
@@ -19,7 +18,7 @@
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"default": "./dist/index.js"
+			"svelte": "./dist/index.js"
 		}
 	},
 	"files": [
