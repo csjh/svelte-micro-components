@@ -120,7 +120,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 		const actions: Record<string, ActionReturn['update']> = blank_object();
 
 		let nodes: ChildNode[];
-		let dispose: Function[] = [];
+		const dispose: (() => void)[] = [];
 		let mounted = false;
 
 		component.$$ = {
@@ -148,7 +148,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 					// maybe because of hydration?
 					if (!component.$$template) component.$$.fragment.c();
 
-					const parent = nodes[0]!.parentNode!;
+					const parent = nodes[0].parentNode!;
 					for (const propName of categorized.text) {
 						console.log(parent.children[0]);
 						console.log(parent.cloneNode(true));
