@@ -42,12 +42,16 @@ export function on<T extends keyof Events>(
 
 // use:action={params}
 // use`${action}=${"nameOfParamsProps"}` | <Component nameOfParamsProps={} />
-export function use<ParameterPropName extends string, SuppliedAction extends Action>(
+export function use<
+	SuppliedAction extends Action,
+	ParameterPropName extends string | undefined = undefined
+>(
 	_: TemplateStringsArray,
 	action: SuppliedAction,
-	parameterPropName: ParameterPropName
+	parameterPropName?: ParameterPropName
 ): UseDirective<ParameterPropName, SuppliedAction> {
-	return ['use', action, parameterPropName];
+	// TODO: why does typescript whine about this
+	return ['use', action, parameterPropName!];
 }
 
 export default function micro_component<Props extends readonly Prop[]>(
@@ -76,7 +80,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 		attr: Set<StringProps>;
 		text: Set<StringProps>;
 		events: Set<OnDirective>;
-		actions: Set<UseDirective<string | unknown>>;
+		actions: Set<UseDirective<string | undefined>>;
 	} = { attr: new Set(), text: new Set(), events: new Set(), actions: new Set() };
 	propNames.forEach((propName, i) => {
 		if (isDirective(propName)) {
@@ -172,7 +176,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 							const el = parent.querySelector(`[data-action-${action[1].name}]`)! as HTMLElement;
 							const action_result = action[1](el, props[action[2] as string]);
 							if (action_result?.update)
-								actions[(action as UseDirective<string>)[2]] = action_result.update;
+								actions[(action as UseDirective<string>)[2]!] = action_result.update;
 							dispose.push(action_destroyer(action_result?.destroy));
 						}
 						mounted = true;

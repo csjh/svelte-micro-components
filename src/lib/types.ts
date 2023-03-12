@@ -20,40 +20,58 @@ import type { SvelteComponentTyped } from 'svelte';
 
 export { Action };
 export type OnDirective<T extends keyof Events = keyof Events> = ['on', T, string];
-export type UseDirective<T extends string | unknown, UserAction extends Action = Action> = [
-	'use',
-	UserAction,
-	T
-];
+export type UseDirective<
+	PropName extends string | undefined,
+	UserAction extends Action = Action
+> = ['use', UserAction, PropName];
 type BindDirective = ['bind', string, unknown?];
-export type Directive = OnDirective | UseDirective<string | unknown>;
+export type Directive = OnDirective | UseDirective<string | undefined>;
 
 export type Prop = string | Directive;
 
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
-	? I
-	: never;
-type KeyValuePairToObject<T> = T extends UseDirective<string>
-	? { [K in T[2]]: Parameters<T[1]>[1] }
-	: {};
-type ExtractUseProps<T extends readonly Prop[]> = UnionToIntersection<
-	KeyValuePairToObject<T[number]>
->;
+type KeyValuePairToObject<T extends UseDirective<string>> = {
+	[K in Exclude<T[2], undefined>]: Parameters<T[1]>[1];
+};
+
+type ExtractUseProps<T extends readonly Prop[]> = Extract<
+	T[number],
+	UseDirective<string>
+> extends never
+	? Record<string, never>
+	: KeyValuePairToObject<Extract<T[number], UseDirective<string>>>;
+
+type Q = [UseDirective<string, Action<HTMLElement, any, Record<never, any>>>];
+type A = Q[number];
+type AA = A[2];
+type QQ = Exclude<A[2], undefined>;
+type Boo = KeyValuePairToObject<A>;
 
 type ExtractProps<T extends readonly Prop[]> = Extract<T[number], string> extends never
-	? {}
+	? Record<string, never>
 	: { [K in Extract<T[number], string>]: string };
 
 type ExtractEvents<T extends readonly Prop[]> = {
 	[K in Extract<T[number], OnDirective>[1]]: Parameters<Events[K]>[0];
 };
 
+// all the ugly { [k in keyof] } stuff is just identity types basically i just do it to make the final type look nicer
+type CheckIfBothRecordStringNever<T1, T2> = T1 extends Record<string, never>
+	? T2 extends Record<string, never>
+		? Record<string, never>
+		: { [K in keyof T2]: T2[K] }
+	: T2 extends Record<string, never>
+	? { [K in keyof T1]: T1[K] }
+	: { [K in keyof T1 | keyof T2]: K extends keyof T1 ? T1[K] : K extends keyof T2 ? T2[K] : never };
+
 // unholy type declaration, should fix
 export type MicroComponent<T extends readonly Prop[]> = typeof SvelteComponentTyped<
-	ExtractUseProps<T> & ExtractProps<T>,
+	CheckIfBothRecordStringNever<ExtractProps<T>, ExtractUseProps<T>>,
 	ExtractEvents<T>
 > &
-	SvelteComponentTyped<ExtractUseProps<T> & ExtractProps<T>, ExtractEvents<T>>;
+	SvelteComponentTyped<
+		CheckIfBothRecordStringNever<ExtractUseProps<T>, ExtractProps<T>>,
+		ExtractEvents<T>
+	>;
 
 export interface Events {
 	// Clipboard Events
