@@ -154,8 +154,6 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 					const parent = nodes[0].parentNode!;
 					for (const propName of categorized.text) {
-						console.log(parent.children[0]);
-						console.log(parent.cloneNode(true));
 						parent.querySelector(`template-${propName}`)!.replaceWith(values[propName]);
 					}
 					for (const propName of categorized.attr) {
