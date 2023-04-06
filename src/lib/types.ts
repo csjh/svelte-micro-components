@@ -19,12 +19,11 @@ import type { Action } from 'svelte/action';
 import type { SvelteComponentTyped } from 'svelte';
 
 export { Action };
-export type OnDirective<T extends keyof Events = keyof Events> = ['on', T, string];
+export type OnDirective<T extends keyof Events = keyof Events, Alias extends string = string> = ['on', T, Alias];
 export type UseDirective<
 	PropName extends string | undefined,
 	UserAction extends Action = Action
 > = ['use', UserAction, PropName];
-type BindDirective = ['bind', string, unknown?];
 export type Directive = OnDirective | UseDirective<string | undefined>;
 
 export type Prop = string | Directive;
@@ -40,18 +39,12 @@ type ExtractUseProps<T extends readonly Prop[]> = Extract<
 	? Record<string, never>
 	: KeyValuePairToObject<Extract<T[number], UseDirective<string>>>;
 
-type Q = [UseDirective<string, Action<HTMLElement, any, Record<never, any>>>];
-type A = Q[number];
-type AA = A[2];
-type QQ = Exclude<A[2], undefined>;
-type Boo = KeyValuePairToObject<A>;
-
 type ExtractProps<T extends readonly Prop[]> = Extract<T[number], string> extends never
 	? Record<string, never>
 	: { [K in Extract<T[number], string>]: string };
 
 type ExtractEvents<T extends readonly Prop[]> = {
-	[K in Extract<T[number], OnDirective>[1]]: Parameters<Events[K]>[0];
+	[K in Extract<T[number], OnDirective>[2]]: Parameters<Events[Extract<T[number], OnDirective>[1]]>[0];
 };
 
 // all the ugly { [k in keyof] } stuff is just identity types basically i just do it to make the final type look nicer

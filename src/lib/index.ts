@@ -32,11 +32,12 @@ const isDirective = (value: unknown): value is Directive => Array.isArray(value)
 
 // on:eventname
 // on`${eventName}` or on`${eventname}=${bubbleUpName}`
-export function on<T extends keyof Events>(
+export function on<T extends keyof Events, Alias extends string>(
 	_: TemplateStringsArray,
 	eventName: T,
-	alias?: string
-): OnDirective<T> {
+	alias?: Alias
+): OnDirective<T, Alias> {
+    // @ts-expect-error why does typescript whine about this
 	return ['on', eventName, alias ?? eventName];
 }
 
@@ -50,8 +51,8 @@ export function use<
 	action: SuppliedAction,
 	parameterPropName?: ParameterPropName
 ): UseDirective<ParameterPropName, SuppliedAction> {
-	// TODO: why does typescript whine about this
-	return ['use', action, parameterPropName!];
+    // @ts-expect-error why does typescript whine about this
+	return ['use', action, parameterPropName];
 }
 
 export default function micro_component<Props extends readonly Prop[]>(
@@ -76,24 +77,28 @@ export default function micro_component<Props extends readonly Prop[]>(
 		}) as any;
 	}
 
+    type Attributes = Set<StringProps>;
+    type Texts = Set<StringProps>;
+    type Events = Set<OnDirective>;
+    type Actions = Set<UseDirective<string | undefined>>;
 	const categorized: {
-		attr: Set<StringProps>;
-		text: Set<StringProps>;
-		events: Set<OnDirective>;
-		actions: Set<UseDirective<string | undefined>>;
-	} = { attr: new Set(), text: new Set(), events: new Set(), actions: new Set() };
+		a: Attributes;
+		t: Texts;
+		e: Events;
+		c: Actions;
+	} = { a: new Set(), t: new Set(), e: new Set(), c: new Set() };
 	propNames.forEach((propName, i) => {
 		if (isDirective(propName)) {
 			if (propName[0] === 'on') {
-				categorized.events.add(propName);
+				categorized.e.add(propName);
 			} else if (propName[0] === 'use') {
-				categorized.actions.add(propName);
+				categorized.c.add(propName);
 			}
 		} else {
 			if (strings[i].at(-1) === '=') {
-				categorized.attr.add(propName);
+				categorized.a.add(propName);
 			} else {
-				categorized.text.add(propName);
+				categorized.t.add(propName);
 			}
 		}
 	});
@@ -103,9 +108,11 @@ export default function micro_component<Props extends readonly Prop[]>(
 		if (isDirective(propName)) {
 			if (propName[0] === 'on') {
 				return previousString + ` data-${propName[1]}-${propName[2]} `;
-			} /*if (propName[0] === 'use')*/ else {
+			} if (propName[0] === 'use') {
 				return previousString + ` data-action-${propName[1].name} `;
-			}
+			} else {
+                throw new Error('Unknown directive');
+            }
 		} else {
 			if (previousString.at(-1) !== '=')
 				return previousString + `<template-${propName}></template-${propName}>`;
@@ -137,10 +144,10 @@ export default function micro_component<Props extends readonly Prop[]>(
 			fragment: {
 				c: () => {
 					nodes = children(node.cloneNode(true) as HTMLElement);
-					for (const propName of categorized.text) {
+					for (const propName of categorized.t) {
 						values[propName] = text(props[propName]);
 					}
-					for (const propName of categorized.attr) {
+					for (const propName of categorized.a) {
 						const attr = document.createAttribute(classes[propName]);
 						attr.value = props[propName];
 						values[propName] = attr;
@@ -153,16 +160,16 @@ export default function micro_component<Props extends readonly Prop[]>(
 					if (!component.$$template) component.$$.fragment.c();
 
 					const parent = nodes[0].parentNode!;
-					for (const propName of categorized.text) {
+					for (const propName of categorized.t) {
 						parent.querySelector(`template-${propName}`)!.replaceWith(values[propName]);
 					}
-					for (const propName of categorized.attr) {
+					for (const propName of categorized.a) {
 						const el = parent.querySelector(`[data-${propName}]`)!;
 						attr(el, `data-${propName}`);
 						el.setAttributeNode(values[propName] as Attr);
 					}
 					if (!mounted) {
-						for (const event of categorized.events) {
+						for (const event of categorized.e) {
 							const el = parent.querySelector(`[data-${event[1]}-${event[2]}]`)!;
 							dispose.push(
 								listen(el, event[1], function (this: HTMLElement, e: Event) {
@@ -170,7 +177,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 								})
 							);
 						}
-						for (const action of categorized.actions) {
+						for (const action of categorized.c) {
 							const el = parent.querySelector(`[data-action-${action[1].name}]`)! as HTMLElement;
 							const action_result = action[1](el, props[action[2] as string]);
 							if (action_result?.update)
