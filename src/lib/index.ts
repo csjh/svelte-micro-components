@@ -17,7 +17,7 @@ import {
 	action_destroyer
 } from 'svelte/internal';
 import type {
-	Events,
+	EventNames,
 	Directive,
 	OnDirective,
 	UseDirective,
@@ -32,13 +32,12 @@ const isDirective = (value: unknown): value is Directive => Array.isArray(value)
 
 // on:eventname
 // on`${eventName}` or on`${eventname}=${bubbleUpName}`
-export function on<T extends keyof Events, Alias extends string>(
+export function on<T extends EventNames, Alias extends string>(
 	_: TemplateStringsArray,
 	eventName: T,
 	alias?: Alias
 ): OnDirective<T, Alias> {
-    // @ts-expect-error why does typescript whine about this
-	return ['on', eventName, alias ?? eventName];
+	return ['on', eventName, alias ?? eventName] as OnDirective<T, Alias>;
 }
 
 // use:action={params}
@@ -51,8 +50,7 @@ export function use<
 	action: SuppliedAction,
 	parameterPropName?: ParameterPropName
 ): UseDirective<ParameterPropName, SuppliedAction> {
-    // @ts-expect-error why does typescript whine about this
-	return ['use', action, parameterPropName];
+	return ['use', action, parameterPropName] as UseDirective<ParameterPropName, SuppliedAction>;
 }
 
 export default function micro_component<Props extends readonly Prop[]>(
@@ -77,10 +75,10 @@ export default function micro_component<Props extends readonly Prop[]>(
 		}) as any;
 	}
 
-    type Attributes = Set<StringProps>;
-    type Texts = Set<StringProps>;
-    type Events = Set<OnDirective>;
-    type Actions = Set<UseDirective<string | undefined>>;
+	type Attributes = Set<StringProps>;
+	type Texts = Set<StringProps>;
+	type Events = Set<OnDirective>;
+	type Actions = Set<UseDirective<string | undefined>>;
 	const categorized: {
 		a: Attributes;
 		t: Texts;
@@ -108,11 +106,11 @@ export default function micro_component<Props extends readonly Prop[]>(
 		if (isDirective(propName)) {
 			if (propName[0] === 'on') {
 				return previousString + ` data-${propName[1]}-${propName[2]} `;
-			} if (propName[0] === 'use') {
+			} else if (propName[0] === 'use') {
 				return previousString + ` data-action-${propName[1].name} `;
 			} else {
-                throw new Error('Unknown directive');
-            }
+				throw new Error('Unknown directive');
+			}
 		} else {
 			if (previousString.at(-1) !== '=')
 				return previousString + `<template-${propName}></template-${propName}>`;
