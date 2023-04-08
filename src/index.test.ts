@@ -61,16 +61,16 @@ describe('types testing', () => {
 		// @ts-expect-error shouldn't allow empty
 		bothProps = {};
 	});
-    it("should allow events", () => {
-        const Component = m`<div ${on`${"click"}=${"boom"}`} />`;
-        const $on: (typeof Component)["$on"] = (type, callback) => ()=>{};
+	it('should allow events', () => {
+		const Component = m`<div ${on`${'click'}=${'boom'}`} />`;
+		const $on: (typeof Component)['$on'] = (type, callback) => () => {};
 
-        // should be fine with boom with empty event
-        $on("boom", (e) => {});
-        $on("boom", () => {});
-        // @ts-expect-error shouldn't allow any events other than boom
-        $on("foo", (e) => {});
-        // @ts-expect-error especially not click
-        $on("click", (e) => {});
-    })
+		// should be fine with boom with empty event
+		$on('boom', (e) => {});
+		$on('boom', () => {});
+		// @ts-expect-error shouldn't allow any events other than boom
+		$on('foo', (e) => {});
+		// @ts-expect-error especially not click
+		$on('click', (e) => {});
+	});
 });
