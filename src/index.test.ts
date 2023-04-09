@@ -62,6 +62,31 @@ describe('types testing', () => {
 		bothProps = {};
 	});
 	it('should allow events', () => {
+		const Component = m`<div ${on`${'click'}`} />`;
+		const $on: (typeof Component)['$on'] = (type, callback) => () => {};
+
+		// should be fine with click with empty event
+		$on('click', (e) => {});
+		$on('click', () => {});
+		// @ts-expect-error shouldn't allow any events other than click
+		$on('foo', (e) => {});
+		// @ts-expect-error especially not boom
+		$on('boom', (e) => {});
+
+		const MultipleComponent = m`<div ${on`${'click'}`} ${on`${'mouseover'}`} />`;
+		const $onMultiple: (typeof MultipleComponent)['$on'] = (type, callback) => () => {};
+
+		// should be fine with click and mouseover with empty event
+		$onMultiple('click', (e) => {});
+		$onMultiple('click', () => {});
+		$onMultiple('mouseover', (e) => {});
+		$onMultiple('mouseover', () => {});
+		// @ts-expect-error shouldn't allow any events other than click and mouseover
+		$onMultiple('foo', (e) => {});
+		// @ts-expect-error especially not boom
+		$onMultiple('boom', (e) => {});
+	});
+	it('should allow events forwarded events', () => {
 		const Component = m`<div ${on`${'click'}=${'boom'}`} />`;
 		const $on: (typeof Component)['$on'] = (type, callback) => () => {};
 
@@ -72,5 +97,18 @@ describe('types testing', () => {
 		$on('foo', (e) => {});
 		// @ts-expect-error especially not click
 		$on('click', (e) => {});
+
+		const MultipleComponent = m`<div ${on`${'click'}=${'boom'}`} ${on`${'mouseover'}=${'shoom'}`} />`;
+		const $onMultiple: (typeof MultipleComponent)['$on'] = (type, callback) => () => {};
+
+		// should be fine with boom and shoom with empty event
+		$onMultiple('boom', (e) => {});
+		$onMultiple('boom', () => {});
+		$onMultiple('shoom', (e) => {});
+		$onMultiple('shoom', () => {});
+		// @ts-expect-error shouldn't allow any events other than boom and shoom
+		$onMultiple('foo', (e) => {});
+		// @ts-expect-error especially not click
+		$onMultiple('click', (e) => {});
 	});
 });

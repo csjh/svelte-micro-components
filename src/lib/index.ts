@@ -32,12 +32,18 @@ const isNonProp = (value: unknown): value is NonProp => Array.isArray(value);
 
 // on:eventname
 // on`${eventName}` or on`${eventname}=${bubbleUpName}`
+export function on<T extends EventNames>(_: TemplateStringsArray, eventName: T): OnDirective<T, T>;
+export function on<T extends EventNames, Alias extends string>(
+	_: TemplateStringsArray,
+	eventName: T,
+	alias: Alias
+): OnDirective<T, Alias>;
 export function on<T extends EventNames, Alias extends string>(
 	_: TemplateStringsArray,
 	eventName: T,
 	alias?: Alias
-): OnDirective<T, Alias> {
-	return ['on', eventName, alias ?? eventName] as OnDirective<T, Alias>;
+) {
+	return ['on', eventName, alias ?? eventName];
 }
 
 // use:action={params}
