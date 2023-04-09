@@ -17,9 +17,10 @@ export type UseDirective<
 	PropName extends string | undefined,
 	UserAction extends Action = Action
 > = ['use', UserAction, PropName];
-export type Directive = OnDirective | UseDirective<string | undefined>;
+export type Slot = readonly ["slot", string];
+export type NonProp = OnDirective | UseDirective<string | undefined> | Slot;
 
-export type Prop = string | Directive;
+export type Prop = string | NonProp;
 
 type KeyValuePairToObject<T extends UseDirective<string>> = {
 	[K in Exclude<T[2], undefined>]: Parameters<T[1]>[1];

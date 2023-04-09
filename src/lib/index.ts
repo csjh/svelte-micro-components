@@ -18,7 +18,7 @@ import {
 } from 'svelte/internal';
 import type {
 	EventNames,
-	Directive,
+	NonProp,
 	OnDirective,
 	UseDirective,
 	Action,
@@ -28,7 +28,7 @@ import type {
 import { BROWSER } from 'esm-env';
 import type { ActionReturn } from 'svelte/action';
 
-const isDirective = (value: unknown): value is Directive => Array.isArray(value);
+const isNonProp = (value: unknown): value is NonProp => Array.isArray(value);
 
 // on:eventname
 // on`${eventName}` or on`${eventname}=${bubbleUpName}`
@@ -53,6 +53,11 @@ export function use<
 	return ['use', action, parameterPropName] as UseDirective<ParameterPropName, SuppliedAction>;
 }
 
+export function slot<T extends string>(name: T): { v: T } {
+    return { v: name };
+}
+slot.v = "default";
+
 export default function micro_component<Props extends readonly Prop[]>(
 	{ raw: strings }: TemplateStringsArray,
 	...propNames: Props
@@ -66,7 +71,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 	if (!BROWSER) {
 		return create_ssr_component((_: unknown, $$props: Record<StringProps, string>) => {
 			return convert((propName, previousString) =>
-				isDirective(propName)
+				isNonProp(propName)
 					? previousString
 					: previousString.at(-1) === '='
 					? previousString.slice(0, previousString.lastIndexOf(' ') + 1)
@@ -86,14 +91,16 @@ export default function micro_component<Props extends readonly Prop[]>(
 		c: Actions;
 	} = { a: new Set(), t: new Set(), e: new Set(), c: new Set() };
 	propNames.forEach((propName, i) => {
-		if (isDirective(propName)) {
+		if (isNonProp(propName)) {
 			if (propName[0] === 'on') {
 				categorized.e.add(propName);
 			} else if (propName[0] === 'use') {
 				categorized.c.add(propName);
-			}
+			} else {
+                throw new Error('Unknown directive');
+            }
 		} else {
-			if (strings[i].at(-1) === '=') {
+			if (strings[i].at(-1) === '=') { // attributes are on the receiving end of an equal
 				categorized.a.add(propName);
 			} else {
 				categorized.t.add(propName);
@@ -103,7 +110,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 	const classes = {} as Record<StringProps, string>;
 	function classify(propName: T, previousString: string) {
-		if (isDirective(propName)) {
+		if (isNonProp(propName)) {
 			if (propName[0] === 'on') {
 				return previousString + ` data-${propName[1]}-${propName[2]} `;
 			} else if (propName[0] === 'use') {
@@ -111,13 +118,13 @@ export default function micro_component<Props extends readonly Prop[]>(
 			} else {
 				throw new Error('Unknown directive');
 			}
-		} else {
-			if (previousString.at(-1) !== '=')
-				return previousString + `<template-${propName}></template-${propName}>`;
-			const start = previousString.lastIndexOf(' ');
-			classes[propName] = previousString.slice(start + 1, -1);
-			return previousString.slice(0, start) + ` data-${propName} `;
 		}
+        if (previousString.at(-1) !== '=') { // if isn't an attribute assignment, it's a text node
+            return previousString + `<template-${propName} />`;
+        }
+        const start = previousString.lastIndexOf(' '); // find the start of the attribute
+        classes[propName] = previousString.slice(start + 1, -1); // store the attribute name
+        return previousString.slice(0, start) + ` data-${propName} `;
 	}
 
 	const template = element('template');
@@ -152,10 +159,11 @@ export default function micro_component<Props extends readonly Prop[]>(
 					}
 				},
 				m: (target, anchor) => {
-					// @ts-expect-error we know c is defined
-					// TODO: also side note no clue why this is needed should look into it
-					// maybe because of hydration?
-					if (!component.$$template) component.$$.fragment.c();
+                    // for hydration; should figure out a better way to do this
+					if (!nodes) {
+                        // @ts-expect-error c is defined in the fragment
+                        component.$$.fragment.c();
+                    }
 
 					const parent = nodes[0].parentNode!;
 					for (const propName of categorized.t) {
