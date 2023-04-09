@@ -8,7 +8,6 @@ import {
 	create_ssr_component,
 	escape,
 	element,
-	blank_object,
 	children,
 	attr,
 	bubble,
@@ -60,9 +59,9 @@ export function use<
 }
 
 export function slot<T extends string>(name: T): { v: T } {
-    return { v: name };
+	return { v: name };
 }
-slot.v = "default";
+slot.v = 'default';
 
 export default function micro_component<Props extends readonly Prop[]>(
 	{ raw: strings }: TemplateStringsArray,
@@ -103,10 +102,11 @@ export default function micro_component<Props extends readonly Prop[]>(
 			} else if (propName[0] === 'use') {
 				categorized.c.add(propName);
 			} else {
-                throw new Error('Unknown directive');
-            }
+				throw new Error('Unknown directive');
+			}
 		} else {
-			if (strings[i].at(-1) === '=') { // attributes are on the receiving end of an equal
+			if (strings[i].at(-1) === '=') {
+				// attributes are on the receiving end of an equal
 				categorized.a.add(propName);
 			} else {
 				categorized.t.add(propName);
@@ -125,12 +125,13 @@ export default function micro_component<Props extends readonly Prop[]>(
 				throw new Error('Unknown directive');
 			}
 		}
-        if (previousString.at(-1) !== '=') { // if isn't an attribute assignment, it's a text node
-            return previousString + `<template-${propName} />`;
-        }
-        const start = previousString.lastIndexOf(' '); // find the start of the attribute
-        classes[propName] = previousString.slice(start + 1, -1); // store the attribute name
-        return previousString.slice(0, start) + ` data-${propName} `;
+		if (previousString.at(-1) !== '=') {
+			// if isn't an attribute assignment, it's a text node
+			return previousString + `<template-${propName} />`;
+		}
+		const start = previousString.lastIndexOf(' '); // find the start of the attribute
+		classes[propName] = previousString.slice(start + 1, -1); // store the attribute name
+		return previousString.slice(0, start) + ` data-${propName} `;
 	}
 
 	const template = element('template');
@@ -138,8 +139,8 @@ export default function micro_component<Props extends readonly Prop[]>(
 	const node = template.content;
 
 	function initialize(component: MicroComponent<Props>, props: Record<StringProps, string>) {
-		const values: Record<StringProps, Attr | Text> = blank_object();
-		const actions: Record<string, ActionReturn['update']> = blank_object();
+		const values: Record<StringProps, Attr | Text> = {};
+		const actions: Record<string, ActionReturn['update']> = {};
 
 		let nodes: ChildNode[];
 		const dispose: (() => void)[] = [];
@@ -150,7 +151,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 			before_update: [],
 			after_update: [],
 			on_destroy: [],
-			callbacks: blank_object(),
+			callbacks: {},
 			// @ts-expect-error other fields shouldn't matter
 			fragment: {
 				c: () => {
@@ -165,11 +166,11 @@ export default function micro_component<Props extends readonly Prop[]>(
 					}
 				},
 				m: (target, anchor) => {
-                    // for hydration; should figure out a better way to do this
+					// for hydration; should figure out a better way to do this
 					if (!nodes) {
-                        // @ts-expect-error c is defined in the fragment
-                        component.$$.fragment.c();
-                    }
+						// @ts-expect-error c is defined in the fragment
+						component.$$.fragment.c();
+					}
 
 					const parent = nodes[0].parentNode!;
 					for (const propName of categorized.t) {
@@ -190,10 +191,10 @@ export default function micro_component<Props extends readonly Prop[]>(
 							);
 						}
 						for (const action of categorized.c) {
-							const el = parent.querySelector(`[data-action-${action[1].name}]`)! as HTMLElement;
+							const el = parent.querySelector(`[data-action-${action[1].name}]`) as HTMLElement;
 							const action_result = action[1](el, props[action[2] as string]);
 							if (action_result?.update)
-								actions[(action as UseDirective<string>)[2]!] = action_result.update;
+								actions[(action as UseDirective<string>)[2]] = action_result.update;
 							dispose.push(action_destroyer(action_result?.destroy));
 						}
 						mounted = true;
