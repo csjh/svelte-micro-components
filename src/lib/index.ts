@@ -13,7 +13,9 @@ import {
 	bubble,
 	listen,
 	run_all,
-	action_destroyer
+	safe_not_equal,
+	action_destroyer,
+	init
 } from 'svelte/internal';
 import type {
 	EventNames,
@@ -26,6 +28,7 @@ import type {
 } from './types';
 import { BROWSER } from 'esm-env';
 import type { ActionReturn } from 'svelte/action';
+import type { Fragment } from 'svelte/types/runtime/internal/types';
 
 const isNonProp = (value: unknown): value is NonProp => Array.isArray(value);
 
@@ -138,82 +141,81 @@ export default function micro_component<Props extends readonly Prop[]>(
 	template.innerHTML = convert(classify);
 	const node = template.content;
 
-	function initialize(component: MicroComponent<Props>, props: Record<StringProps, string>) {
-		const values: Record<StringProps, Attr | Text> = {};
-		const actions: Record<string, ActionReturn['update']> = {};
+	type Context = [
+		(this: HTMLElement, e: Event) => void,
+		Record<StringProps, string>,
+		Record<StringProps, Attr | Text>,
+		Record<string, ActionReturn['update']>
+	];
+
+	function create_fragment(ctx: Context) {
+		const [bubbler, props, values, actions] = ctx;
 
 		let nodes: ChildNode[];
 		const dispose: (() => void)[] = [];
 		let mounted = false;
 
-		component.$$ = {
-			on_mount: [],
-			before_update: [],
-			after_update: [],
-			on_destroy: [],
-			callbacks: {},
-			// @ts-expect-error other fields shouldn't matter
-			fragment: {
-				c: () => {
-					nodes = children(node.cloneNode(true) as HTMLElement);
-					for (const propName of categorized.t) {
-						values[propName] = text(props[propName]);
-					}
-					for (const propName of categorized.a) {
-						const attr = document.createAttribute(classes[propName]);
-						attr.value = props[propName];
-						values[propName] = attr;
-					}
-				},
-				m: (target, anchor) => {
-					// for hydration; should figure out a better way to do this
-					if (!nodes) {
-						// @ts-expect-error c is defined in the fragment
-						component.$$.fragment.c();
-					}
-
-					const parent = nodes[0].parentNode!;
-					for (const propName of categorized.t) {
-						parent.querySelector(`template-${propName}`)!.replaceWith(values[propName]);
-					}
-					for (const propName of categorized.a) {
-						const el = parent.querySelector(`[data-${propName}]`)!;
-						attr(el, `data-${propName}`);
-						el.setAttributeNode(values[propName] as Attr);
-					}
-					if (!mounted) {
-						for (const event of categorized.e) {
-							const el = parent.querySelector(`[data-${event[1]}-${event[2]}]`)!;
-							dispose.push(
-								listen(el, event[1], function (this: HTMLElement, e: Event) {
-									bubble.call(this, component, e);
-								})
-							);
-						}
-						for (const action of categorized.c) {
-							const el = parent.querySelector(`[data-action-${action[1].name}]`) as HTMLElement;
-							const action_result = action[1](el, props[action[2] as string]);
-							if (action_result?.update)
-								actions[(action as UseDirective<string>)[2]] = action_result.update;
-							dispose.push(action_destroyer(action_result?.destroy));
-						}
-						mounted = true;
-					}
-
-					// note: can insert all with Template.content, but then can't access nodes after insertion
-					nodes.forEach((node) => insert(target, node, anchor));
-				},
-				l: noop,
-				p: noop,
-				i: noop,
-				o: noop,
-				d: (detaching) => {
-					if (detaching) nodes.forEach(detach);
-					mounted = false;
-					run_all(dispose);
+		return {
+			c() {
+				nodes = children(node.cloneNode(true) as HTMLElement);
+			},
+			m(target: Node, anchor: Node | undefined) {
+				// for hydration; should figure out a better way to do this
+				if (!nodes) {
+					this.c!();
 				}
+
+				const parent = nodes[0].parentNode!;
+				for (const propName of categorized.t) {
+					parent.querySelector(`template-${propName}`)!.replaceWith(values[propName]);
+				}
+				for (const propName of categorized.a) {
+					const el = parent.querySelector(`[data-${propName}]`)!;
+					attr(el, `data-${propName}`);
+					el.setAttributeNode(values[propName] as Attr);
+				}
+				if (!mounted) {
+					for (const event of categorized.e) {
+						const el = parent.querySelector(`[data-${event[1]}-${event[2]}]`)!;
+						dispose.push(listen(el, event[1], bubbler));
+					}
+					for (const action of categorized.c) {
+						const el = parent.querySelector(`[data-action-${action[1].name}]`) as HTMLElement;
+						const action_result = action[1](el, props[action[2] as string]);
+						if (action_result?.update)
+							actions[(action as UseDirective<string>)[2]] = action_result.update;
+						dispose.push(action_destroyer(action_result?.destroy));
+					}
+					mounted = true;
+				}
+
+				// note: can insert all with Template.content, but then can't access nodes after insertion
+				nodes.forEach((node) => insert(target, node, anchor));
+			},
+			l: noop,
+			p: noop,
+			i: noop,
+			o: noop,
+			d(detaching) {
+				if (detaching) nodes.forEach(detach);
+				mounted = false;
+				run_all(dispose);
 			}
-		};
+		} satisfies Partial<Fragment>;
+	}
+
+	function instance(component: SvelteComponent, props: Record<StringProps, string>): Context {
+		const values: Record<StringProps, Attr | Text> = {};
+		const actions: Record<string, ActionReturn['update']> = {};
+
+		for (const propName of categorized.t) {
+			values[propName] = text(props[propName]);
+		}
+		for (const propName of categorized.a) {
+			const attr = document.createAttribute(classes[propName]);
+			attr.value = props[propName];
+			values[propName] = attr;
+		}
 
 		component.$$set = (props: Record<StringProps, string>) => {
 			for (const prop in props) {
@@ -221,12 +223,21 @@ export default function micro_component<Props extends readonly Prop[]>(
 				if (prop in actions) actions[prop]!(props[prop]);
 			}
 		};
+
+		return [
+			function (this: HTMLElement, e: Event) {
+				bubble.call(this, component, e);
+			},
+			props,
+			values,
+			actions
+		];
 	}
 
 	return class extends SvelteComponent {
-		constructor({ props = {} }: ComponentConstructorOptions) {
+		constructor(options: ComponentConstructorOptions) {
 			super();
-			initialize(this as any, props);
+			init(this, options, instance, create_fragment, safe_not_equal, {}, undefined);
 		}
 	} as any;
 }
