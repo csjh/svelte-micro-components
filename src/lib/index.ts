@@ -15,7 +15,12 @@ import {
 	run_all,
 	safe_not_equal,
 	action_destroyer,
-	init
+	init,
+	update_slot_base,
+	get_all_dirty_from_scope,
+	get_slot_changes,
+	transition_in,
+	transition_out
 } from 'svelte/internal';
 import type {
 	EventNames,
@@ -24,13 +29,15 @@ import type {
 	UseDirective,
 	Action,
 	Prop,
-	MicroComponent
+	MicroComponent,
+	Slot
 } from './types';
 import { BROWSER } from 'esm-env';
 import type { ActionReturn } from 'svelte/action';
 import type { Fragment } from 'svelte/types/runtime/internal/types';
 
-const isNonProp = (value: unknown): value is NonProp => Array.isArray(value);
+const isNonProp = (value: unknown): value is NonProp =>
+	['slot', 'on', 'use'].includes((value as string[])[0]);
 
 // on:eventname
 // on`${eventName}` or on`${eventname}=${bubbleUpName}`
@@ -107,8 +114,6 @@ export default function micro_component<Props extends readonly Prop[]>(
 				categorized.e.add(propName);
 			} else if (propName[0] === 'use') {
 				categorized.c.add(propName);
-			} else {
-				throw new Error('Unknown directive');
 			}
 		} else {
 			if (strings[i].at(-1) === '=') {
@@ -124,20 +129,21 @@ export default function micro_component<Props extends readonly Prop[]>(
 	function classify(propName: T, previousString: string) {
 		if (isNonProp(propName)) {
 			if (propName[0] === 'on') {
-				return previousString + ` data-${propName[1]}-${propName[2]} `;
+				return previousString + ` data-event-${propName[1]}-${propName[2]} `;
 			} else if (propName[0] === 'use') {
 				return previousString + ` data-action-${propName[1].name} `;
-			} else {
-				throw new Error('Unknown directive');
+			} else if (propName[0] === 'slot') {
+				return previousString + `<slot-${propName[1]}></slot-${propName[1]}>`;
 			}
 		}
+		// TODO: this will break if person writes 2*2=${something} or similar
 		if (previousString.at(-1) !== '=') {
 			// if isn't an attribute assignment, it's a text node
-			return previousString + `<template-${propName} />`;
+			return previousString + `<text-${propName}></text-${propName}>`;
 		}
 		const start = previousString.lastIndexOf(' '); // find the start of the attribute
 		classes[propName] = previousString.slice(start + 1, -1); // store the attribute name
-		return previousString.slice(0, start) + ` data-${propName} `;
+		return previousString.slice(0, start) + ` data-attribute-${propName} `;
 	}
 
 	const template = element('template');
@@ -165,21 +171,28 @@ export default function micro_component<Props extends readonly Prop[]>(
 			m(target: Node, anchor: Node | undefined) {
 				// for hydration; should figure out a better way to do this
 				if (!nodes) {
-					this.c!();
+					// @ts-expect-error c is defined right above
+					this.c();
 				}
 
-				const parent = nodes[0].parentNode!;
+				const parent = nodes[0].parentNode as ParentNode;
 				for (const propName of categorized.t) {
-					parent.querySelector(`template-${propName}`)!.replaceWith(values[propName]);
+					parent.querySelector(`text-${propName}`)!.replaceWith(values[propName]);
 				}
 				for (const propName of categorized.a) {
-					const el = parent.querySelector(`[data-${propName}]`)!;
-					attr(el, `data-${propName}`);
+					const el = parent.querySelector(`[data-attribute-${propName}]`) as Element;
+					attr(el, `data-attribute-${propName}`);
 					el.setAttributeNode(values[propName] as Attr);
+				}
+				for (const slot of slots) {
+					const placeholder = parent.querySelector(`slot-${slot[0]}`) as Element;
+					slot[1].m(placeholder.parentElement as HTMLElement, placeholder);
+					detach(placeholder);
 				}
 				if (!mounted) {
 					for (const event of categorized.e) {
-						const el = parent.querySelector(`[data-${event[1]}-${event[2]}]`)!;
+						const el = parent.querySelector(`[data-event-${event[1]}-${event[2]}]`) as Element;
+						attr(el, `data-event-${event[1]}-${event[2]}`);
 						dispose.push(listen(el, event[1], bubbler));
 					}
 					for (const action of categorized.c) {
