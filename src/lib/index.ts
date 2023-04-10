@@ -61,10 +61,13 @@ export function use<
 	return ['use', action, parameterPropName] as UseDirective<ParameterPropName, SuppliedAction>;
 }
 
-export function slot<T extends string>(name: T): { v: T } {
-	return { v: name };
+// maybe make `slot` available as a value and function?
+// so you can do `slot` instead of `slot()` for the common case
+export function slot(): Slot<'default'>;
+export function slot<T extends string>(name: T): Slot<T>;
+export function slot<T extends string>(name?: T): Slot<T> {
+	return ['slot', name ?? 'default'] as Slot<T>;
 }
-slot.v = 'default';
 
 export default function micro_component<Props extends readonly Prop[]>(
 	{ raw: strings }: TemplateStringsArray,
