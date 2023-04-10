@@ -87,15 +87,24 @@ export default function micro_component<Props extends readonly Prop[]>(
 		strings.map((s, i) => (propNames[i] ? fn(propNames[i], s) : s)).join('');
 
 	if (!BROWSER) {
-		return create_ssr_component((_: unknown, $$props: Record<StringProps, string>) => {
-			return convert((propName, previousString) =>
-				isNonProp(propName)
-					? previousString
-					: previousString.at(-1) === '='
-					? previousString.slice(0, previousString.lastIndexOf(' ') + 1)
-					: previousString + escape($$props[propName])
-			);
-		}) as any;
+		return create_ssr_component(
+			(
+				$$result: unknown,
+				$$props: Record<StringProps, string>,
+				$$bindings: unknown,
+				slots: Record<string, (props: Record<string, unknown>) => string>
+			) => {
+				return convert((propName, previousString) =>
+					isNonProp(propName)
+						? propName[0] === 'slot'
+							? previousString + slots[propName[1]]?.({}) ?? ''
+							: previousString
+						: previousString.at(-1) === '='
+						? previousString.slice(0, previousString.lastIndexOf(' ') + 1)
+						: previousString + escape($$props[propName])
+				);
+			}
+		) as any;
 	}
 
 	type Attributes = Set<StringProps>;
