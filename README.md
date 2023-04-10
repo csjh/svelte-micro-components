@@ -131,15 +131,15 @@ Basic action:
 	import m, { on, use } from '$lib';
 
 	const Box = m`
-        <div ${use`${changeColor}=${"color"}`} ${on`${"click"}`}>
+        <div ${use`${changeColor}=${'color'}`} ${on`${'click'}`}>
             I start off as red, but when you click me I turn green.
         </div>
     `;
 
-	let color = "rgb(255, 0, 0)";
+	let color = 'rgb(255, 0, 0)';
 </script>
 
-<Box on:click={() => color = "rgb(0, 255, 0)"} {color} />
+<Box on:click={() => (color = 'rgb(0, 255, 0)')} {color} />
 ```
 
 Parameterized action (longpress from [this official example](https://svelte.dev/examples/adding-parameters-to-actions)):
@@ -148,7 +148,11 @@ Parameterized action (longpress from [this official example](https://svelte.dev/
 <script context="module" lang="ts">
 	import type { Action } from 'svelte/action';
 
-	declare const longpress: Action<HTMLElement, number, { 'on:longpress': (e: CustomEvent) => void }>;
+	declare const longpress: Action<
+		HTMLElement,
+		number,
+		{ 'on:longpress': (e: CustomEvent) => void }
+	>;
 </script>
 
 <script lang="ts">
@@ -188,21 +192,20 @@ Complex action:
 <script lang="ts" context="module">
 	import type { Action } from 'svelte/action';
 	declare const pannable: Action<
-		HTMLElement, null, {
+		HTMLElement,
+		null,
+		{
 			'on:panstart': CustomEvent<{ x: number; y: number }>;
 			'on:panmove': CustomEvent<{ x: number; y: number; dx: number; dy: number }>;
 			'on:panend': CustomEvent<{ x: number; y: number }>;
 		}
-	>
+	>;
 </script>
 
 <script lang="ts">
 	import { spring } from 'svelte/motion';
 
-	const coords = spring(
-		{ x: 0, y: 0 },
-		{ stiffness: 0.2, damping: 0.4 }
-	);
+	const coords = spring({ x: 0, y: 0 }, { stiffness: 0.2, damping: 0.4 });
 
 	function handlePanStart() {
 		coords.stiffness = coords.damping = 1;
