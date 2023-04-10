@@ -32,14 +32,16 @@ type ExtractUseEvents<T extends readonly Prop[]> = Extract<
 	T[number],
 	UseDirective<string | undefined>
 > extends never
-	? Record<string, never>
+	? Record<never, never>
 	: Extract<T[number], UseDirective> extends UseDirective<
 			string | undefined,
 			Action<Element, infer _, infer Attributes>
 	  >
-	? Extract<keyof Attributes, `on:${string}`> extends `on:${infer Q}`
+	? Attributes extends Record<string, never>
+		? Record<string, never>
+		: Extract<keyof Attributes, `on:${string}`> extends `on:${infer Q}`
 		? { [K in Q]: Attributes[`on:${K}`] }
-		: never
+		: Record<string, never>
 	: Record<string, never>;
 
 // REGULAR PROP TYPES
@@ -83,7 +85,9 @@ type AllowUnion<T> = T extends UseDirective<
 	string | undefined,
 	Action<Element, infer _, infer Attributes>
 >
-	? GetEvents<Attributes>
+	? Attributes extends Record<string, never>
+		? never
+		: GetEvents<Attributes>
 	: never;
 
 // utility type
