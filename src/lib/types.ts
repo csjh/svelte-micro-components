@@ -25,7 +25,6 @@ export type Prop = string | NonProp;
 type KeyValuePairToObject<T extends UseDirective<string>> = {
 	[K in Exclude<T[2], undefined>]: Parameters<T[1]>[1];
 };
-
 type ExtractUseProps<T extends readonly Prop[]> = Extract<
 	T[number],
 	UseDirective<string>
@@ -60,9 +59,11 @@ type CheckIfBothRecordStringNever<T1, T2> = T1 extends Record<string, never>
 // unholy type declaration, should fix
 export type MicroComponent<T extends readonly Prop[]> = typeof SvelteComponentTyped<
 	CheckIfBothRecordStringNever<ExtractProps<T>, ExtractUseProps<T>>,
-	ExtractEvents<T>
+	ExtractEvents<T>,
+	ExtractSlots<T>
 > &
 	SvelteComponentTyped<
 		CheckIfBothRecordStringNever<ExtractUseProps<T>, ExtractProps<T>>,
-		ExtractEvents<T>
+		ExtractEvents<T>,
+		ExtractSlots<T>
 	>;
