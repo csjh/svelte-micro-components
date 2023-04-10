@@ -23,7 +23,7 @@ import {
 	transition_out
 } from 'svelte/internal';
 import type {
-	EventNames,
+	ValidateProps,
 	NonProp,
 	OnDirective,
 	UseDirective,
@@ -41,13 +41,13 @@ const isNonProp = (value: unknown): value is NonProp =>
 
 // on:eventname
 // on`${eventName}` or on`${eventname}=${bubbleUpName}`
-export function on<T extends EventNames>(_: TemplateStringsArray, eventName: T): OnDirective<T, T>;
-export function on<T extends EventNames, Alias extends string>(
+export function on<T extends string>(_: TemplateStringsArray, eventName: T): OnDirective<T, T>;
+export function on<T extends string, Alias extends string>(
 	_: TemplateStringsArray,
 	eventName: T,
 	alias: Alias
 ): OnDirective<T, Alias>;
-export function on<T extends EventNames, Alias extends string>(
+export function on<T extends string, Alias extends string>(
 	_: TemplateStringsArray,
 	eventName: T,
 	alias?: Alias
@@ -78,7 +78,7 @@ export function slot<T extends string>(name?: T): Slot<T> {
 
 export default function micro_component<Props extends readonly Prop[]>(
 	{ raw: strings }: TemplateStringsArray,
-	...propNames: Props
+	...propNames: ValidateProps<Props>
 ): MicroComponent<Props> {
 	type T = Prop;
 	type StringProps = Extract<T, string>;
