@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-empty-function */
+
+import { describe, it } from 'vitest';
 import m, { on, use } from '$lib';
 import type { Action } from 'svelte/action';
 
@@ -25,7 +28,7 @@ describe('types testing', () => {
 		noProps = { foo: 'bar' };
 	});
 	it('should work with action props', () => {
-		const action: Action<HTMLElement, { foo: string }> = (node, params) => {};
+		const action: Action<HTMLElement, { foo: string }> = () => {};
 
 		const Component = m`<div ${use`${action}=${'prop'}`} />`;
 		type Props = (typeof Component)['$$prop_def'];
@@ -35,7 +38,7 @@ describe('types testing', () => {
 		// @ts-expect-error shouldn't allow any props other than prop
 		props = { foo: 'bar' };
 
-		const emptyAction: Action<HTMLElement> = (node) => {};
+		const emptyAction: Action<HTMLElement> = () => {};
 
 		const NoPropsComponent = m`<div ${use`${emptyAction}`} />`;
 		type NoProps = (typeof NoPropsComponent)['$$prop_def'];
@@ -62,6 +65,12 @@ describe('types testing', () => {
 		bothProps = {};
 	});
 	it('should allow events', () => {
+		const Empty = m`<div />`;
+		const $non: (typeof Empty)['$on'] = (type, callback) => () => {};
+
+		// @ts-expect-error shouldn't allow any events
+		$non('click', (e) => {});
+
 		const Component = m`<div ${on`${'click'}`} />`;
 		const $on: (typeof Component)['$on'] = (type, callback) => () => {};
 
