@@ -8,7 +8,7 @@ import type { Action } from 'svelte/action';
 describe('types testing', () => {
 	it('should not allow undeclared props', () => {
 		const Component = m`<div class=${'hello'} />`;
-		type Props = (typeof Component)['$$prop_def'];
+		type Props = InstanceType<typeof Component>['$$prop_def'];
 
 		// should be fine with hello
 		let props: Props = { hello: 'bye' };
@@ -20,7 +20,7 @@ describe('types testing', () => {
 		props = {};
 
 		const NoPropsComponent = m`<div />`;
-		type NoProps = (typeof NoPropsComponent)['$$prop_def'];
+		type NoProps = InstanceType<typeof NoPropsComponent>['$$prop_def'];
 
 		// shouldn't need any props
 		let noProps: NoProps = {};
@@ -31,7 +31,7 @@ describe('types testing', () => {
 		const action: Action<HTMLElement, { foo: string }> = () => {};
 
 		const Component = m`<div ${use`${action}=${'prop'}`} />`;
-		type Props = (typeof Component)['$$prop_def'];
+		type Props = InstanceType<typeof Component>['$$prop_def'];
 
 		// should be fine with prop
 		let props: Props = { prop: { foo: 'bar' } };
@@ -41,7 +41,7 @@ describe('types testing', () => {
 		const emptyAction: Action<HTMLElement> = () => {};
 
 		const NoPropsComponent = m`<div ${use`${emptyAction}`} />`;
-		type NoProps = (typeof NoPropsComponent)['$$prop_def'];
+		type NoProps = InstanceType<typeof NoPropsComponent>['$$prop_def'];
 
 		// shouldn't need any props
 		let noProps: NoProps = {};
@@ -49,7 +49,7 @@ describe('types testing', () => {
 		noProps = { foo: 'bar' };
 
 		const BothPropsComponent = m`<div ${use`${action}=${'prop'}`} ${use`${emptyAction}`}>${'hello'}</div>`;
-		type BothProps = (typeof BothPropsComponent)['$$prop_def'];
+		type BothProps = InstanceType<typeof BothPropsComponent>['$$prop_def'];
 
 		// should be fine with prop and hello
 		let bothProps: BothProps = { prop: { foo: 'bar' }, hello: 'world' };
@@ -66,13 +66,14 @@ describe('types testing', () => {
 	});
 	it('should allow events', () => {
 		const Empty = m`<div />`;
-		const $non: (typeof Empty)['$on'] = (type, callback) => () => {};
+
+		const $non: InstanceType<typeof Empty>['$on'] = (type, callback) => () => {};
 
 		// @ts-expect-error shouldn't allow any events
 		$non('click', (e) => {});
 
 		const Component = m`<div ${on`${'click'}`} />`;
-		const $on: (typeof Component)['$on'] = (type, callback) => () => {};
+		const $on: InstanceType<typeof Component>['$on'] = (type, callback) => () => {};
 
 		// should be fine with click with empty event
 		$on('click', (e) => {});
@@ -83,7 +84,7 @@ describe('types testing', () => {
 		$on('boom', (e) => {});
 
 		const MultipleComponent = m`<div ${on`${'click'}`} ${on`${'mouseover'}`} />`;
-		const $onMultiple: (typeof MultipleComponent)['$on'] = (type, callback) => () => {};
+		const $onMultiple: InstanceType<typeof MultipleComponent>['$on'] = (type, callback) => () => {};
 
 		// should be fine with click and mouseover with empty event
 		$onMultiple('click', (e) => {});
@@ -97,7 +98,7 @@ describe('types testing', () => {
 	});
 	it('should allow events forwarded events', () => {
 		const Component = m`<div ${on`${'click'}=${'boom'}`} />`;
-		const $on: (typeof Component)['$on'] = (type, callback) => () => {};
+		const $on: InstanceType<typeof Component>['$on'] = (type, callback) => () => {};
 
 		// should be fine with boom with empty event
 		$on('boom', (e) => {});
@@ -108,7 +109,7 @@ describe('types testing', () => {
 		$on('click', (e) => {});
 
 		const MultipleComponent = m`<div ${on`${'click'}=${'boom'}`} ${on`${'mouseover'}=${'shoom'}`} />`;
-		const $onMultiple: (typeof MultipleComponent)['$on'] = (type, callback) => () => {};
+		const $onMultiple: InstanceType<typeof MultipleComponent>['$on'] = (type, callback) => () => {};
 
 		// should be fine with boom and shoom with empty event
 		$onMultiple('boom', (e) => {});

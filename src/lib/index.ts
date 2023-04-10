@@ -1,6 +1,5 @@
 import {
 	type ComponentConstructorOptions,
-	SvelteComponent,
 	text,
 	detach,
 	noop,
@@ -20,7 +19,8 @@ import {
 	get_all_dirty_from_scope,
 	get_slot_changes,
 	transition_in,
-	transition_out
+	transition_out,
+	SvelteComponent
 } from 'svelte/internal';
 import type {
 	ValidateProps,
@@ -28,8 +28,8 @@ import type {
 	OnDirective,
 	UseDirective,
 	Action,
-	Prop,
 	MicroComponent,
+	Prop,
 	Slot
 } from './types';
 import { BROWSER } from 'esm-env';
@@ -79,7 +79,7 @@ export function slot<T extends string>(name?: T): Slot<T> {
 export default function micro_component<Props extends readonly Prop[]>(
 	{ raw: strings }: TemplateStringsArray,
 	...propNames: ValidateProps<Props>
-): MicroComponent<Props> {
+): typeof MicroComponent<Props> {
 	type T = Prop;
 	type StringProps = Extract<T, string>;
 
@@ -199,7 +199,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 				const parent = nodes[0].parentNode as ParentNode;
 				for (const propName of categorized.t) {
-					parent.querySelector(`text-${propName}`)!.replaceWith(values[propName]);
+					(parent.querySelector(`text-${propName}`) as Element).replaceWith(values[propName]);
 				}
 				for (const propName of categorized.a) {
 					const el = parent.querySelector(`[data-attribute-${propName}]`) as Element;
@@ -271,7 +271,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 	}
 
 	function instance(
-		component: SvelteComponent,
+		component: MicroComponent<Props>,
 		props: PropValues,
 		invalidate: (idx: number, p: unknown) => void
 	): Context {
@@ -313,5 +313,5 @@ export default function micro_component<Props extends readonly Prop[]>(
 			super();
 			init(this, options, instance, create_fragment, safe_not_equal, {}, undefined);
 		}
-	} as any;
+	} as unknown as typeof MicroComponent<Props>;
 }

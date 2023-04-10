@@ -1,17 +1,19 @@
 import type { DOMAttributes } from 'svelte/elements';
 import type { Action } from 'svelte/action';
-import type { SvelteComponentTyped } from 'svelte';
+import { SvelteComponentTyped } from 'svelte';
 
 export type NonProp = OnDirective | UseDirective<string | undefined> | Slot;
 export type Prop = string | NonProp;
 export type ValidateProps<T extends readonly Prop[]> = {
-    [K in keyof T]: T[K] extends OnDirective<any, infer Alias> ? OnDirective<EventNames | AllowUnion<T[number]>, Alias> : T[K];
-}
+	[K in keyof T]: T[K] extends OnDirective<string, infer Alias>
+		? OnDirective<EventNames | AllowUnion<T[number]>, Alias>
+		: T[K];
+};
 
 // USE DIRECTIVE TYPES
 export { Action };
 export type UseDirective<
-	PropName extends string | undefined,
+	PropName extends string | undefined = string | undefined,
 	UserAction extends Action = Action
 > = ['use', UserAction, PropName];
 
@@ -26,12 +28,18 @@ type ExtractUseProps<T extends readonly Prop[]> = Extract<
 	? Record<string, never>
 	: KeyValuePairToObject<Extract<T[number], UseDirective<string>>>;
 
-type ExtractUseEvents<T extends readonly Prop[]> = Extract<T[number], UseDirective<any>> extends never
+type ExtractUseEvents<T extends readonly Prop[]> = Extract<
+	T[number],
+	UseDirective<string | undefined>
+> extends never
 	? Record<string, never>
-	: Extract<T[number], UseDirective<any>> extends UseDirective<any, Action<any, any, infer U>>
-        ? Extract<keyof U, `on:${string}`> extends `on:${infer Q}`
-            ? { [K in Q]: U[`on:${K}`] }
-            : never
+	: Extract<T[number], UseDirective> extends UseDirective<
+			string | undefined,
+			Action<Element, infer _, infer Attributes>
+	  >
+	? Extract<keyof Attributes, `on:${string}`> extends `on:${infer Q}`
+		? { [K in Q]: Attributes[`on:${K}`] }
+		: never
 	: Record<string, never>;
 
 // REGULAR PROP TYPES
@@ -65,8 +73,18 @@ type ExtractEvents<T extends readonly Prop[]> = {
 	>[0];
 };
 
-type GetEvents<T extends Record<string, any>> = Extract<keyof T, `on:${string}`> extends `on:${infer U}`? U : never;
-type AllowUnion<T> = T extends UseDirective<any, Action<any, any, infer Attributes>> ? GetEvents<Attributes> : never;
+type GetEvents<T extends Record<string, unknown>> = Extract<
+	keyof T,
+	`on:${string}`
+> extends `on:${infer U}`
+	? U
+	: never;
+type AllowUnion<T> = T extends UseDirective<
+	string | undefined,
+	Action<Element, infer _, infer Attributes>
+>
+	? GetEvents<Attributes>
+	: never;
 
 // utility type
 type CheckIfBothRecordStringNever<T1, T2, Fallback> = T1 extends Record<string, never>
@@ -77,14 +95,8 @@ type CheckIfBothRecordStringNever<T1, T2, Fallback> = T1 extends Record<string, 
 	? { [K in keyof T1]: T1[K] }
 	: { [K in keyof T1 | keyof T2]: K extends keyof T1 ? T1[K] : K extends keyof T2 ? T2[K] : never };
 
-// unholy type declaration, should fix
-export type MicroComponent<T extends readonly Prop[]> = typeof SvelteComponentTyped<
+export class MicroComponent<T extends readonly Prop[]> extends SvelteComponentTyped<
 	CheckIfBothRecordStringNever<ExtractProps<T>, ExtractUseProps<T>, Record<string, never>>,
 	CheckIfBothRecordStringNever<ExtractEvents<T>, ExtractUseEvents<T>, Record<never, never>>,
 	ExtractSlots<T>
-> &
-	SvelteComponentTyped<
-		CheckIfBothRecordStringNever<ExtractUseProps<T>, ExtractProps<T>, Record<string, never>>,
-		CheckIfBothRecordStringNever<ExtractEvents<T>, ExtractUseEvents<T>, Record<never, never>>,
-		ExtractSlots<T>
-	>;
+> {}
