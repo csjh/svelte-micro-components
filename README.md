@@ -246,3 +246,53 @@ Complex action:
 		rotate({$coords.x * 0.2}deg)"
 />
 ```
+
+Slots:
+
+```svelte
+<script>
+	import m, { slot } from '$lib';
+
+	const Box = m`
+        <div class="box">
+            ${slot()}
+        </div>
+    `;
+</script>
+
+<Box>
+	<h2>Hello!</h2>
+	<p>This is a box. It can contain anything.</p>
+</Box>
+```
+
+Named slots:
+
+```svelte
+<script>
+	import m, { slot } from '$lib';
+
+	const ContactCard = m`<article class="contact-card">
+        <h2>
+            ${slot('name')}
+        </h2>
+
+        <div class="address">
+            ${slot('address')}
+        </div>
+
+        <div class="email">
+            ${slot('email')}
+        </div>
+    </article>`;
+</script>
+
+<ContactCard>
+	<span slot="name"> P. Sherman </span>
+
+	<span slot="address">
+		42 Wallaby Way<br />
+		Sydney
+	</span>
+</ContactCard>
+```

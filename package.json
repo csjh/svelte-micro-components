@@ -1,6 +1,6 @@
 {
 	"name": "svelte-micro-components",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"license": "MIT",
 	"scripts": {
 		"dev": "vite dev",
@@ -15,6 +15,7 @@
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write ."
 	},
+    "main": "./dist/index.js",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
