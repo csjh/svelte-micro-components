@@ -17,7 +17,7 @@ export type UseDirective<
 	PropName extends string | undefined,
 	UserAction extends Action = Action
 > = ['use', UserAction, PropName];
-export type Slot = readonly ['slot', string];
+export type Slot<T extends string = string> = ['slot', T];
 export type NonProp = OnDirective | UseDirective<string | undefined> | Slot;
 
 export type Prop = string | NonProp;
@@ -35,7 +35,11 @@ type ExtractUseProps<T extends readonly Prop[]> = Extract<
 
 type ExtractProps<T extends readonly Prop[]> = Extract<T[number], string> extends never
 	? Record<string, never>
-	: { [K in Extract<T[number], string>]: string };
+	: { [K in Extract<T[number], string>]: {} };
+
+type ExtractSlots<T extends readonly Prop[]> = Extract<T[number], Slot> extends never
+	? {}
+	: { [K in Extract<T[number], Slot>[1]]: {} };
 
 type NeverUndefined<T> = T extends undefined | null ? never : T;
 type ExtractEvents<T extends readonly Prop[]> = {

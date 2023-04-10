@@ -159,23 +159,36 @@ export default function micro_component<Props extends readonly Prop[]>(
 	template.innerHTML = convert(classify);
 	const node = template.content;
 
+	type PropValues = Record<StringProps, string> & {
+		$$scope: { dirty: number; ctx: unknown[] };
+		$$slots: Record<string, [(ctx: unknown) => Fragment]>;
+	};
 	type Context = [
-		(this: HTMLElement, e: Event) => void,
-		Record<StringProps, string>,
-		Record<StringProps, Attr | Text>,
-		Record<string, ActionReturn['update']>
+		(this: HTMLElement, e: Event) => void, // bubbler
+		PropValues, // props
+		Record<StringProps, Attr | Text>, // values
+		Record<string, ActionReturn['update']>, // actions
+		Record<string, [(ctx: unknown) => Fragment]>, // slots
+		{ dirty: number; ctx: unknown[] } // scope
 	];
 
 	function create_fragment(ctx: Context) {
 		const [bubbler, props, values, actions] = ctx;
+		const { $$scope, $$slots = {} } = props;
 
 		let nodes: ChildNode[];
 		const dispose: (() => void)[] = [];
 		let mounted = false;
+		let current: boolean;
+
+		const slots = Object.entries($$slots).map(
+			([name, slot]) => [name, slot[0]($$scope.ctx), slot] as const
+		); // reduced create_slot
 
 		return {
 			c() {
 				nodes = children(node.cloneNode(true) as HTMLElement);
+				slots.forEach((slot) => slot[1].c());
 			},
 			m(target: Node, anchor: Node | undefined) {
 				// for hydration; should figure out a better way to do this
@@ -216,22 +229,55 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 				// note: can insert all with Template.content, but then can't access nodes after insertion
 				nodes.forEach((node) => insert(target, node, anchor));
+
+				current = true;
 			},
 			l: noop,
-			p: noop,
-			i: noop,
-			o: noop,
+			p(ctx, [dirty]) {
+				const $$scope = ctx[5];
+				slots.forEach(([_, slot, definition]) => {
+					if (slot.p) {
+						console.log(_, slot.p);
+						update_slot_base(
+							slot,
+							definition,
+							null,
+							$$scope,
+							!current
+								? get_all_dirty_from_scope($$scope)
+								: get_slot_changes(definition, $$scope, dirty, null),
+							null
+						);
+					}
+				});
+			},
+			i(local) {
+				if (current) return;
+				slots.forEach((slot) => transition_in(slot[1], local));
+				current = true;
+			},
+			o(local) {
+				slots.forEach((slot) => transition_out(slot[1], local));
+				current = false;
+			},
 			d(detaching) {
+				// i feel like this is wrong, if it is maybe do something recursive if needed
 				if (detaching) nodes.forEach(detach);
+				slots.forEach((slot) => slot[1].d(detaching));
 				mounted = false;
 				run_all(dispose);
 			}
 		} satisfies Partial<Fragment>;
 	}
 
-	function instance(component: SvelteComponent, props: Record<StringProps, string>): Context {
+	function instance(
+		component: SvelteComponent,
+		props: PropValues,
+		invalidate: (idx: number, p: unknown) => void
+	): Context {
 		const values: Record<StringProps, Attr | Text> = {};
-		const actions: Record<string, ActionReturn['update']> = {};
+		const actions: Record<string, Exclude<ActionReturn['update'], undefined>> = {};
+		const { $$slots = {}, $$scope } = props;
 
 		for (const propName of categorized.t) {
 			values[propName] = text(props[propName]);
@@ -242,10 +288,11 @@ export default function micro_component<Props extends readonly Prop[]>(
 			values[propName] = attr;
 		}
 
-		component.$$set = (props: Record<StringProps, string>) => {
+		component.$$set = (props: PropValues) => {
+			if ('$$scope' in props) invalidate(5, props.$$scope);
 			for (const prop in props) {
 				if (prop in values) values[prop].nodeValue = props[prop];
-				if (prop in actions) actions[prop]!(props[prop]);
+				if (prop in actions) actions[prop](props[prop]);
 			}
 		};
 
@@ -255,7 +302,9 @@ export default function micro_component<Props extends readonly Prop[]>(
 			},
 			props,
 			values,
-			actions
+			actions,
+			$$slots,
+			$$scope
 		];
 	}
 
