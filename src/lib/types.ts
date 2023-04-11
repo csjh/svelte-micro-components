@@ -1,6 +1,6 @@
 import type { DOMAttributes } from 'svelte/elements';
 import type { Action } from 'svelte/action';
-import { SvelteComponentTyped } from 'svelte';
+import type { SvelteComponentTyped } from 'svelte';
 
 export type NonProp = OnDirective | UseDirective<string | undefined> | Slot;
 export type Prop = string | NonProp;
@@ -103,7 +103,7 @@ type CheckIfBothRecordStringNever<T1, T2, Fallback> = T1 extends Record<string, 
 	? { [K in keyof T1]: T1[K] }
 	: { [K in keyof T1 | keyof T2]: K extends keyof T1 ? T1[K] : K extends keyof T2 ? T2[K] : never };
 
-export class MicroComponent<T extends readonly Prop[]> extends SvelteComponentTyped<
+export declare class MicroComponent<T extends readonly Prop[]> extends SvelteComponentTyped<
 	CheckIfBothRecordStringNever<ExtractProps<T>, ExtractUseProps<T>, Record<string, never>>,
 	CheckIfBothRecordStringNever<ExtractEvents<T>, ExtractUseEvents<T>, Record<never, never>>,
 	ExtractSlots<T>
