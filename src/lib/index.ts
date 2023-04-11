@@ -9,7 +9,6 @@ import {
 	element,
 	children,
 	attr,
-	bubble,
 	listen,
 	run_all,
 	safe_not_equal,
@@ -17,7 +16,6 @@ import {
 	init,
 	update_slot_base,
 	get_all_dirty_from_scope,
-	get_slot_changes,
 	transition_in,
 	transition_out,
 	SvelteComponent
@@ -32,7 +30,7 @@ import type {
 	Prop,
 	Slot
 } from './types';
-import { BROWSER } from 'esm-env';
+import { BROWSER } from 'esm-env-robust';
 import type { ActionReturn } from 'svelte/action';
 import type { Fragment } from 'svelte/types/runtime/internal/types';
 
@@ -140,7 +138,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 	function classify(propName: Prop, previousString: string) {
 		if (isNonProp(propName)) {
 			if (propName[0] === 'on') {
-				return previousString + ` data-event-${propName[1]}-${propName[2]} `;
+				return previousString + ` data-event-${propName[2]} `;
 			} else if (propName[0] === 'use') {
 				return previousString + ` data-action-${propName[1].name} `;
 			} else if (propName[0] === 'slot') {
@@ -166,7 +164,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 		$$slots: Record<string, [(ctx: unknown) => Fragment]>;
 	};
 	type Context = [
-		(this: HTMLElement, e: Event) => void, // bubbler
+		(this: HTMLElement, e: Event, alias: string) => void, // bubbler
 		PropValues, // props
 		Record<string, Attr | Text>, // values
 		Record<string, ActionReturn['update']>, // actions
@@ -215,9 +213,9 @@ export default function micro_component<Props extends readonly Prop[]>(
 				}
 				if (!mounted) {
 					for (const event of categorized.e) {
-						const el = parent.querySelector(`[data-event-${event[1]}-${event[2]}]`) as Element;
-						attr(el, `data-event-${event[1]}-${event[2]}`);
-						dispose.push(listen(el, event[1], bubbler));
+						const el = parent.querySelector(`[data-event-${event[2]}]`) as Element;
+						attr(el, `data-event-${event[2]}`);
+						dispose.push(listen(el, event[1], function(this: HTMLElement, e: Event) { bubbler.call(this, e, event[2]) }));
 					}
 					for (const action of categorized.c) {
 						const el = parent.querySelector(`[data-action-${action[1].name}]`) as HTMLElement;
@@ -234,12 +232,13 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 				current = true;
 			},
-			l: noop,
-			p(ctx, [dirty]) {
+			l: noop, // reclaims the elements (instead of creating)
+            h: noop, // hydrates the elements (adds attributes, event listeners, actions)
+			p(ctx) {
 				const $$scope = ctx[5];
 				slots.forEach(([_, slot, definition]) => {
+                    // @ts-expect-error stop your whining
 					if (slot.p) {
-						console.log(_, slot.p);
 						update_slot_base(
 							slot,
 							definition,
@@ -247,7 +246,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 							$$scope,
 							!current
 								? get_all_dirty_from_scope($$scope)
-								: get_slot_changes(definition, $$scope, dirty, null),
+								: $$scope.dirty,
 							null
 						);
 					}
@@ -299,8 +298,12 @@ export default function micro_component<Props extends readonly Prop[]>(
 		};
 
 		return [
-			function (this: HTMLElement, e: Event) {
-				bubble.call(this, component, e);
+			function (this: HTMLElement, e: Event, alias: string) {
+                const callbacks = component.$$.callbacks[alias];
+                if (callbacks) {
+                    // @ts-ignore
+                    callbacks.slice().forEach(fn => fn(e));
+                }
 			},
 			props,
 			values,
