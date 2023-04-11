@@ -80,35 +80,37 @@ export default function micro_component<Props extends readonly Prop[]>(
 	{ raw: strings }: TemplateStringsArray,
 	...propNames: ValidateProps<Props>
 ): typeof MicroComponent<Props> {
-	type T = Prop;
-	type StringProps = Extract<T, string>;
-
-	const convert = (fn: (propName: T, previousString: string) => string) =>
+	const convert = (fn: (propName: Prop, previousString: string) => string) =>
 		strings.map((s, i) => (propNames[i] ? fn(propNames[i], s) : s)).join('');
 
 	if (!BROWSER) {
 		return create_ssr_component(
 			(
 				$$result: unknown,
-				$$props: Record<StringProps, string>,
+				$$props: Record<string, string>,
 				$$bindings: unknown,
 				slots: Record<string, (props: Record<string, unknown>) => string>
 			) => {
-				return convert((propName, previousString) =>
-					isNonProp(propName)
-						? propName[0] === 'slot'
-							? previousString + slots[propName[1]]?.({}) ?? ''
-							: previousString
-						: previousString.at(-1) === '='
-						? previousString.slice(0, previousString.lastIndexOf(' ') + 1)
-						: previousString + escape($$props[propName])
-				);
+				function classify(propName: Prop, previousString: string) {
+					if (isNonProp(propName)) {
+						if (propName[0] === 'slot') {
+							return previousString + slots[propName[1]]?.({}) ?? '';
+						}
+						return previousString;
+					}
+					if (previousString.at(-1) === '=') {
+						return previousString.slice(0, previousString.lastIndexOf(' ') + 1);
+					}
+					return previousString + escape($$props[propName]);
+				}
+
+				return convert(classify);
 			}
 		) as any;
 	}
 
-	type Attributes = Set<StringProps>;
-	type Texts = Set<StringProps>;
+	type Attributes = Set<string>;
+	type Texts = Set<string>;
 	type Events = Set<OnDirective>;
 	type Actions = Set<UseDirective<string | undefined>>;
 	const categorized: {
@@ -134,8 +136,8 @@ export default function micro_component<Props extends readonly Prop[]>(
 		}
 	});
 
-	const classes = {} as Record<StringProps, string>;
-	function classify(propName: T, previousString: string) {
+	const classes = {} as Record<string, string>;
+	function classify(propName: Prop, previousString: string) {
 		if (isNonProp(propName)) {
 			if (propName[0] === 'on') {
 				return previousString + ` data-event-${propName[1]}-${propName[2]} `;
@@ -159,14 +161,14 @@ export default function micro_component<Props extends readonly Prop[]>(
 	template.innerHTML = convert(classify);
 	const node = template.content;
 
-	type PropValues = Record<StringProps, string> & {
+	type PropValues = Record<string, string> & {
 		$$scope: { dirty: number; ctx: unknown[] };
 		$$slots: Record<string, [(ctx: unknown) => Fragment]>;
 	};
 	type Context = [
 		(this: HTMLElement, e: Event) => void, // bubbler
 		PropValues, // props
-		Record<StringProps, Attr | Text>, // values
+		Record<string, Attr | Text>, // values
 		Record<string, ActionReturn['update']>, // actions
 		Record<string, [(ctx: unknown) => Fragment]>, // slots
 		{ dirty: number; ctx: unknown[] } // scope
@@ -275,7 +277,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 		props: PropValues,
 		invalidate: (idx: number, p: unknown) => void
 	): Context {
-		const values: Record<StringProps, Attr | Text> = {};
+		const values: Record<string, Attr | Text> = {};
 		const actions: Record<string, Exclude<ActionReturn['update'], undefined>> = {};
 		const { $$slots = {}, $$scope } = props;
 

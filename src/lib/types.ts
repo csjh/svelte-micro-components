@@ -7,6 +7,10 @@ export type Prop = string | NonProp;
 export type ValidateProps<T extends readonly Prop[]> = {
 	[K in keyof T]: T[K] extends OnDirective<string, infer Alias>
 		? OnDirective<EventNames | AllowUnion<T[number]>, Alias>
+		: T[K] extends string
+		? string extends T[K]
+			? never
+			: T[K]
 		: T[K];
 };
 
