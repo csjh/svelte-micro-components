@@ -58,8 +58,8 @@ export function on<T extends string, Alias extends string>(
 	_: TemplateStringsArray,
 	eventName: T,
 	alias?: Alias
-) {
-	return ['on', eventName, alias ?? eventName];
+): OnDirective<T, Alias> | OnDirective<T, T> {
+	return [ON, eventName, alias ?? eventName] as OnDirective<T, Alias>;
 }
 
 // use:action={params}
