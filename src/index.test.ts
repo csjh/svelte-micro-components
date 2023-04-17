@@ -10,8 +10,9 @@ describe('types testing', () => {
 		const Component = m`<div class=${'hello'} />`;
 		type Props = InstanceType<typeof Component>['$$prop_def'];
 
+        let props: Props;
 		// should be fine with hello
-		let props: Props = { hello: 'bye' };
+		props = { hello: 'bye' };
 		// @ts-expect-error shouldn't allow any props other than hello
 		props = { foo: 'bar' };
 		// @ts-expect-error even if hello is declared
@@ -22,8 +23,9 @@ describe('types testing', () => {
 		const NoPropsComponent = m`<div />`;
 		type NoProps = InstanceType<typeof NoPropsComponent>['$$prop_def'];
 
+        let noProps: NoProps;
 		// shouldn't need any props
-		let noProps: NoProps = {};
+		noProps = {};
 		// @ts-expect-error should not allow any props
 		noProps = { foo: 'bar' };
 	});
@@ -33,8 +35,9 @@ describe('types testing', () => {
 		const Component = m`<div ${use`${action}=${'prop'}`} />`;
 		type Props = InstanceType<typeof Component>['$$prop_def'];
 
+        let props: Props;
 		// should be fine with prop
-		let props: Props = { prop: { foo: 'bar' } };
+		props = { prop: { foo: 'bar' } };
 		// @ts-expect-error shouldn't allow any props other than prop
 		props = { foo: 'bar' };
 
@@ -43,16 +46,18 @@ describe('types testing', () => {
 		const NoPropsComponent = m`<div ${use`${emptyAction}`} />`;
 		type NoProps = InstanceType<typeof NoPropsComponent>['$$prop_def'];
 
+        let noProps: NoProps;
 		// shouldn't need any props
-		let noProps: NoProps = {};
+		noProps = {};
 		// @ts-expect-error should not allow any props
 		noProps = { foo: 'bar' };
 
 		const BothPropsComponent = m`<div ${use`${action}=${'prop'}`} ${use`${emptyAction}`}>${'hello'}</div>`;
 		type BothProps = InstanceType<typeof BothPropsComponent>['$$prop_def'];
 
+        let bothProps: BothProps;
 		// should be fine with prop and hello
-		let bothProps: BothProps = { prop: { foo: 'bar' }, hello: 'world' };
+		bothProps = { prop: { foo: 'bar' }, hello: 'world' };
 		// @ts-expect-error shouldn't allow one of them missing
 		bothProps = { hello: 'world' };
 		// @ts-expect-error same as above
