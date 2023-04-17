@@ -16,6 +16,10 @@ Currently supports:
 - Actions, including:
   - with events: `` <div ${use`${outclick}`} /> `` (the component will emit a fully typed `outclick` event when the user clicks outside of the element)
   - with props: `` <div ${use`${longclick}=${'duration'}`} /> ``
+- Nested components
+  - `` <div class="wrapper">${component`<${Nested} />`}</div> ``
+  - with props: `` <div class="wrapper">${component`<${Nested} prop=${'nested_prop'} />`}</div> `` (`Nested` will be passed the prop `nested_prop`)
+  - events are not currently supported
 
 ## Usage
 
@@ -53,7 +57,7 @@ Dynamic attributes:
 
 ```svelte
 <script lang="ts">
-	import m from '$lib';
+	import m from 'svelte-micro-components';
 
 	const src = 'https://svelte.dev/tutorial/image.gif';
 	const name = 'Rick Astley';
@@ -62,6 +66,19 @@ Dynamic attributes:
 </script>
 
 <Image {src} alt="{name} dancing" />
+```
+
+Nested components:
+
+```svelte
+<script lang="ts">
+	import m, { component } from 'svelte-micro-components';
+	import Nested from './Nested.svelte';
+
+	const Wrapper = m`<div class="wrapper">${component`<${Nested} />`}</div>`;
+</script>
+
+<Wrapper />
 ```
 
 DOM events:
@@ -75,7 +92,7 @@ DOM events:
 		pos.y = event.clientY;
 	}
 
-	import m, { on } from '$lib';
+	import m, { on } from 'svelte-micro-components';
 
 	const Tracker = m`
 		<div ${on`${'mousemove'}`}>
@@ -98,7 +115,7 @@ Event forwarding:
 		pos.y = event.clientY;
 	}
 
-	import m, { on } from '$lib';
+	import m, { on } from 'svelte-micro-components';
 
 	const Tracker = m`
 		<div ${on`${'mousemove'}=${'moved'}`}>
@@ -128,7 +145,7 @@ Basic action:
 </script>
 
 <script lang="ts">
-	import m, { on, use } from '$lib';
+	import m, { on, use } from 'svelte-micro-components';
 
 	const Box = m`
 		<div ${use`${changeColor}=${'color'}`} ${on`${'click'}`}>
@@ -156,7 +173,7 @@ Parameterized action (longpress from [this official example](https://svelte.dev/
 </script>
 
 <script lang="ts">
-	import m, { on, use } from '$lib';
+	import m, { on, use } from 'svelte-micro-components';
 
 	let pressed = false;
 	let duration = 2000;
@@ -224,7 +241,7 @@ Complex action:
 		coords.set({ x: 0, y: 0 });
 	}
 
-	import m, { on, use } from '$lib';
+	import m, { on, use } from 'svelte-micro-components';
 
 	const Box = m`
 		<div class="box"
@@ -251,7 +268,7 @@ Slots:
 
 ```svelte
 <script>
-	import m, { slot } from '$lib';
+	import m, { slot } from 'svelte-micro-components';
 
 	const Box = m`
 		<div class="box">
@@ -270,7 +287,7 @@ Named slots:
 
 ```svelte
 <script>
-	import m, { slot } from '$lib';
+	import m, { slot } from 'svelte-micro-components';
 
 	const ContactCard = m`
         <article class="contact-card">

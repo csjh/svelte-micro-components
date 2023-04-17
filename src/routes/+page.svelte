@@ -64,6 +64,23 @@
 	</section>
 	<section>
 		<header>
+			<h3>Nested Components:</h3>
+			<a href="https://svelte.dev/repl/2d104d50e8af4ce29178fa2136e8d6eb?version=3.58.0">REPL</a>
+		</header>
+
+		<pre><code class="language-html"
+				>&lt;script lang="ts"&gt;
+	import m, &lcub; component &rcub; from 'svelte-micro-components';
+    import Nested from './Nested.svelte';
+
+	const Wrapper = m`&lt;div class="wrapper"&gt;$&lcub;component`&lt;$&lcub;Nested&rcub; /&gt;`&rcub;&lt;/div&gt;`;
+&lt;/script&gt;
+
+&lt;Wrapper /&gt;
+</code></pre>
+	</section>
+	<section>
+		<header>
 			<h3>DOM Events:</h3>
 			<a href="https://svelte.dev/repl/90aae0da3ab349efbc25a9ed7910559e?version=3.58.0">REPL</a>
 		</header>
