@@ -42,7 +42,8 @@ Currently supports:
 ## Examples
 
 Basic text interpolation:
-
+Link to REPL:
+[REPL](https://svelte.dev/repl/5c837032b30e4322857d2ba9820baccb?version=3.58.0)
 ```svelte
 <script lang="ts">
 	import m from 'svelte-micro-components';
@@ -54,7 +55,7 @@ Basic text interpolation:
 ```
 
 Dynamic attributes:
-
+[REPL](https://svelte.dev/repl/13e16447f48045f89af04b10a58a0974?version=3.58.0)
 ```svelte
 <script lang="ts">
 	import m from 'svelte-micro-components';
@@ -69,7 +70,7 @@ Dynamic attributes:
 ```
 
 Nested components:
-
+[REPL](https://svelte.dev/repl/2d104d50e8af4ce29178fa2136e8d6eb?version=3.58.0)
 ```svelte
 <script lang="ts">
 	import m, { component } from 'svelte-micro-components';
@@ -82,7 +83,7 @@ Nested components:
 ```
 
 DOM events:
-
+[REPL](https://svelte.dev/repl/90aae0da3ab349efbc25a9ed7910559e?version=3.58.0)
 ```svelte
 <script lang="ts">
 	let pos = { x: 0, y: 0 };
@@ -105,7 +106,7 @@ DOM events:
 ```
 
 Event forwarding:
-
+[REPL](https://svelte.dev/repl/8c29f13eff8e4d70b98ee8dd5db0c411?version=3.58.0)
 ```svelte
 <script lang="ts">
 	let pos = { x: 0, y: 0 };
@@ -128,7 +129,7 @@ Event forwarding:
 ```
 
 Basic action:
-
+[REPL](https://svelte.dev/repl/39570d0aa2e7433893d25bba2a524b09?version=3.58.0)
 ```svelte
 <script context="module" lang="ts">
 	import type { Action } from 'svelte/action';
@@ -160,7 +161,7 @@ Basic action:
 ```
 
 Parameterized action (longpress from [this official example](https://svelte.dev/examples/adding-parameters-to-actions)):
-
+[REPL](https://svelte.dev/repl/05bbcba99418486692a7979b3d88e206?version=3.58.0)
 ```svelte
 <script context="module" lang="ts">
 	import type { Action } from 'svelte/action';
@@ -204,7 +205,7 @@ Parameterized action (longpress from [this official example](https://svelte.dev/
 ```
 
 Complex action:
-
+[REPL](https://svelte.dev/repl/38ee0361bb904d448414959077829f0a?version=3.58.0)
 ```svelte
 <script lang="ts" context="module">
 	import type { Action } from 'svelte/action';
@@ -265,7 +266,7 @@ Complex action:
 ```
 
 Slots:
-
+[REPL](https://svelte.dev/repl/848b525661094ac7b45e6a5f3d1206a5?version=3.58.0)
 ```svelte
 <script>
 	import m, { slot } from 'svelte-micro-components';
@@ -284,7 +285,7 @@ Slots:
 ```
 
 Named slots:
-
+[REPL](https://svelte.dev/repl/b18dfb2c26c641c8b861b61a28fce7a4?version=3.58.0)
 ```svelte
 <script>
 	import m, { slot } from 'svelte-micro-components';
@@ -314,4 +315,68 @@ Named slots:
 		Sydney
 	</span>
 </ContactCard>
+```
+
+Modal:
+[REPL](https://svelte.dev/repl/4cb5fb9f668e423cb770e700b9109ef9?version=3.58.0)
+```svelte
+<script>
+    let showModal = false;
+    
+    function dialogShow(node) {
+        return {
+            update(showModal) {
+                if (showModal) node.showModal();
+                else node.close();
+            }
+        }
+    }
+    
+    import m, { slot, on, use } from "svelte-micro-components";
+    
+    const Modal = m`
+        <dialog
+            ${on`${"close"}`}
+            ${on`${"click"}`}
+            ${use`${dialogShow}=${"showmodal"}`}
+        >
+            <div ${on`${"click"}=${'divClick'}`}>
+                ${slot("header")}
+                <hr />
+                ${slot()}
+                <hr />
+                <!-- svelte-ignore a11y-autofocus -->
+                <button autofocus ${on`${"click"}`}>close modal</button>
+            </div>
+        </dialog>
+    `;
+    
+    function hide() { showModal = false }
+    function show() { showModal = true }
+    function stopPropagation(e) { e.stopPropagation(); }
+</script>
+
+<button on:click={show}>
+    show modal
+</button>
+
+<Modal on:close={hide} on:click={hide} on:divClick={stopPropagation} showmodal={showModal}>
+    <h2 slot="header">
+        modal
+        <small><em>adjective</em> mod·al \ˈmō-dəl\</small>
+    </h2>
+
+    <ol class="definition-list">
+        <li>of or relating to modality in logic</li>
+        <li>
+            containing provisions as to the mode of procedure or the manner of taking effect —used of a contract or legacy
+        </li>
+        <li>of or relating to a musical mode</li>
+        <li>of or relating to structure as opposed to substance</li>
+        <li>of, relating to, or constituting a grammatical form or category characteristically indicating predication</li>
+        <li>of or relating to a statistical mode</li>
+    </ol>
+
+    <a href="https://www.merriam-webster.com/dictionary/modal">merriam-webster.com</a>
+</Modal>
 ```
