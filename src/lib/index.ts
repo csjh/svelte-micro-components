@@ -34,8 +34,17 @@ import { BROWSER } from 'esm-env-robust';
 import type { ActionReturn } from 'svelte/action';
 import type { Fragment } from 'svelte/types/runtime/internal/types';
 
+const SLOT = Symbol();
+export type SLOT = typeof SLOT;
+const ON = Symbol();
+export type ON = typeof ON;
+const USE = Symbol();
+export type USE = typeof USE;
+const COMPONENT = Symbol();
+export type COMPONENT = typeof COMPONENT;
+
 const isNonProp = (value: unknown): value is NonProp =>
-	['slot', 'on', 'use'].includes((value as string[])[0]);
+	[SLOT, ON, USE, COMPONENT].includes((value as NonProp)[0]);
 
 // on:eventname
 // on`${eventName}` or on`${eventname}=${bubbleUpName}`
@@ -63,7 +72,7 @@ export function use<
 	action: SuppliedAction,
 	parameterPropName?: ParameterPropName
 ): UseDirective<ParameterPropName, SuppliedAction> {
-	return ['use', action, parameterPropName] as UseDirective<ParameterPropName, SuppliedAction>;
+	return [USE, action, parameterPropName] as UseDirective<ParameterPropName, SuppliedAction>;
 }
 
 // maybe make `slot` available as a value and function?
@@ -71,7 +80,8 @@ export function use<
 export function slot(): Slot<'default'>;
 export function slot<T extends string>(name: T): Slot<T>;
 export function slot<T extends string>(name?: T): Slot<T> {
-	return ['slot', name ?? 'default'] as Slot<T>;
+	return [SLOT, name ?? 'default'] as Slot<T>;
+}
 }
 
 export default function micro_component<Props extends readonly Prop[]>(
@@ -91,7 +101,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 			) => {
 				function classify(propName: Prop, previousString: string) {
 					if (isNonProp(propName)) {
-						if (propName[0] === 'slot') {
+						if (propName[0] === SLOT) {
 							return previousString + slots[propName[1]]?.({}) ?? '';
 						}
 						return previousString;
@@ -119,9 +129,9 @@ export default function micro_component<Props extends readonly Prop[]>(
 	} = { a: new Set(), t: new Set(), e: new Set(), c: new Set() };
 	propNames.forEach((propName, i) => {
 		if (isNonProp(propName)) {
-			if (propName[0] === 'on') {
+			if (propName[0] === ON) {
 				categorized.e.add(propName);
-			} else if (propName[0] === 'use') {
+			} else if (propName[0] === USE) {
 				categorized.c.add(propName);
 			}
 		} else {
@@ -137,11 +147,11 @@ export default function micro_component<Props extends readonly Prop[]>(
 	const classes = {} as Record<string, string>;
 	function classify(propName: Prop, previousString: string) {
 		if (isNonProp(propName)) {
-			if (propName[0] === 'on') {
+			if (propName[0] === ON) {
 				return previousString + ` data-event-${propName[2]} `;
-			} else if (propName[0] === 'use') {
+			} else if (propName[0] === USE) {
 				return previousString + ` data-action-${propName[1].name} `;
-			} else if (propName[0] === 'slot') {
+			} else if (propName[0] === SLOT) {
 				return previousString + `<slot-${propName[1]}></slot-${propName[1]}>`;
 			}
 		}
@@ -215,10 +225,15 @@ export default function micro_component<Props extends readonly Prop[]>(
 					for (const event of categorized.e) {
 						const el = parent.querySelector(`[data-event-${event[2]}]`) as Element;
 						attr(el, `data-event-${event[2]}`);
-						dispose.push(listen(el, event[1], function(this: HTMLElement, e: Event) { bubbler.call(this, e, event[2]) }));
+						dispose.push(
+							listen(el, event[1], function (this: HTMLElement, e: Event) {
+								bubbler.call(this, e, event[2]);
+							})
+						);
 					}
 					for (const action of categorized.c) {
 						const el = parent.querySelector(`[data-action-${action[1].name}]`) as HTMLElement;
+						attr(el, `data-action-${action[1].name}`);
 						const action_result = action[1](el, props[action[2] as string]);
 						if (action_result?.update)
 							actions[(action as UseDirective<string>)[2]] = action_result.update;
@@ -232,21 +247,20 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 				current = true;
 			},
+			// are these even possible :(
 			l: noop, // reclaims the elements (instead of creating)
-            h: noop, // hydrates the elements (adds attributes, event listeners, actions)
+			h: noop, // hydrates the elements (adds attributes, event listeners, actions)
 			p(ctx) {
 				const $$scope = ctx[5];
 				slots.forEach(([_, slot, definition]) => {
-                    // @ts-expect-error stop your whining
+					// @ts-expect-error stop your whining
 					if (slot.p) {
 						update_slot_base(
 							slot,
 							definition,
 							null,
 							$$scope,
-							!current
-								? get_all_dirty_from_scope($$scope)
-								: $$scope.dirty,
+							!current ? get_all_dirty_from_scope($$scope) : $$scope.dirty,
 							null
 						);
 					}
@@ -299,11 +313,11 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 		return [
 			function (this: HTMLElement, e: Event, alias: string) {
-                const callbacks = component.$$.callbacks[alias];
-                if (callbacks) {
-                    // @ts-ignore
-                    callbacks.slice().forEach(fn => fn(e));
-                }
+				const callbacks = component.$$.callbacks[alias];
+				if (callbacks) {
+					// @ts-ignore
+					callbacks.slice().forEach((fn) => fn(e));
+				}
 			},
 			props,
 			values,

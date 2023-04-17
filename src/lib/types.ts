@@ -1,8 +1,9 @@
 import type { DOMAttributes } from 'svelte/elements';
 import type { Action } from 'svelte/action';
 import type { SvelteComponentTyped } from 'svelte';
+import type { SLOT, ON, USE, COMPONENT } from '$lib';
 
-export type NonProp = OnDirective | UseDirective<string | undefined> | Slot;
+export type NonProp = OnDirective | UseDirective | Slot;
 export type Prop = string | NonProp;
 export type ValidateProps<T extends readonly Prop[]> = {
 	[K in keyof T]: T[K] extends OnDirective<string, infer Alias>
@@ -19,7 +20,7 @@ export { Action };
 export type UseDirective<
 	PropName extends string | undefined = string | undefined,
 	UserAction extends Action = Action
-> = ['use', UserAction, PropName];
+> = [USE, UserAction, PropName];
 
 type KeyValuePairToObject<T extends UseDirective<string>> = {
 	[K in Exclude<T[2], undefined>]: Parameters<T[1]>[1];
@@ -54,18 +55,14 @@ type ExtractProps<T extends readonly Prop[]> = Extract<T[number], string> extend
 	: { [K in Extract<T[number], string>]: {} };
 
 // SLOT TYPES
-export type Slot<T extends string = string> = ['slot', T];
+export type Slot<T extends string = string> = [SLOT, T];
 
 type ExtractSlots<T extends readonly Prop[]> = Extract<T[number], Slot> extends never
 	? {}
 	: { [K in Extract<T[number], Slot>[1]]: {} };
 
 // ON DIRECTIVE TYPES
-export type OnDirective<T extends string = string, Alias extends string = string> = [
-	'on',
-	T,
-	Alias
-];
+export type OnDirective<T extends string = string, Alias extends string = string> = [ON, T, Alias];
 
 type NeverUndefined<T> = T extends undefined | null ? never : T;
 
