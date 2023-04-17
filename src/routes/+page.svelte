@@ -29,6 +29,7 @@
 	<section style="text-align: center">
 		<header>
 			<h3>Basic text interpolation:</h3>
+            <a href="https://svelte.dev/repl/5c837032b30e4322857d2ba9820baccb?version=3.58.0">REPL</a>
 		</header>
 
 		<pre><code class="language-html"
@@ -43,11 +44,14 @@
 	</section>
 
 	<section>
-		<header><h3>Dynamic attributes:</h3></header>
+		<header>
+            <h3>Dynamic attributes:</h3>
+            <a href="https://svelte.dev/repl/13e16447f48045f89af04b10a58a0974?version=3.58.0">REPL</a>
+        </header>
 
 		<pre><code class="language-html"
 				>&lt;script lang="ts"&gt;
-	import m from '$lib';
+	import m from 'svelte-micro-components';
 
 	const src = 'https://svelte.dev/tutorial/image.gif';
 	const name = 'Rick Astley';
@@ -59,7 +63,10 @@
 </code></pre>
 	</section>
 	<section>
-		<header><h3>DOM Events:</h3></header>
+		<header>
+            <h3>DOM Events:</h3>
+            <a href="https://svelte.dev/repl/90aae0da3ab349efbc25a9ed7910559e?version=3.58.0">REPL</a>
+        </header>
 
 		<pre><code class="language-html"
 				>&lt;script lang="ts"&gt;
@@ -70,7 +77,7 @@
 		pos.y = event.clientY;
 	&rcub;
 
-	import m, &lcub; on &rcub; from '$lib';
+	import m, &lcub; on &rcub; from 'svelte-micro-components';
 
 	const Tracker = m`
 		&lt;div $&lcub;on`$&lcub;'mousemove'&rcub;`&rcub;&gt;
@@ -83,7 +90,10 @@
 </code></pre>
 	</section>
 	<section>
-		<header><h3>Event forwarding:</h3></header>
+		<header>
+            <h3>Event forwarding:</h3>
+            <a href="https://svelte.dev/repl/8c29f13eff8e4d70b98ee8dd5db0c411?version=3.58.0">REPL</a>
+        </header>
 
 		<pre><code class="language-html"
 				>&lt;script lang="ts"&gt;
@@ -94,7 +104,7 @@
 		pos.y = event.clientY;
 	&rcub;
 
-	import m, &lcub; on &rcub; from '$lib';
+	import m, &lcub; on &rcub; from 'svelte-micro-components';
 
 	const Tracker = m`
 		&lt;div $&lcub;on`$&lcub;'mousemove'&rcub;=$&lcub;'moved'&rcub;`&rcub;&gt;
@@ -107,7 +117,10 @@
 </code></pre>
 	</section>
 	<section>
-		<header><h3>Basic action:</h3></header>
+		<header>
+            <h3>Basic action:</h3>
+            <a href="https://svelte.dev/repl/39570d0aa2e7433893d25bba2a524b09?version=3.58.0">REPL</a>
+        </header>
 
 		<pre><code class="language-html"
 				>&lt;script context="module" lang="ts"&gt;
@@ -125,7 +138,7 @@
 &lt;/script&gt;
 
 &lt;script lang="ts"&gt;
-	import m, &lcub; on, use &rcub; from '$lib';
+	import m, &lcub; on, use &rcub; from 'svelte-micro-components';
 
 	const Box = m`
 		&lt;div $&lcub;use`$&lcub;changeColor&rcub;=$&lcub;'color'&rcub;`&rcub; $&lcub;on`$&lcub;'click'&rcub;`&rcub;&gt;
@@ -141,11 +154,8 @@
 	</section>
 	<section>
 		<header>
-			<h3>
-				Parameterized action (longpress from <a
-					href="https://svelte.dev/examples/adding-parameters-to-actions">this example</a
-				>):
-			</h3>
+			<h3>Parameterized action:</h3>
+            <a href="https://svelte.dev/repl/05bbcba99418486692a7979b3d88e206?version=3.58.0">REPL</a>
 		</header>
 
 		<pre><code class="language-html"
@@ -160,7 +170,7 @@
 &lt;/script&gt;
 
 &lt;script lang="ts"&gt;
-	import m, &lcub; on, use &rcub; from '$lib';
+	import m, &lcub; on, use &rcub; from 'svelte-micro-components';
 
 	let pressed = false;
 	let duration = 2000;
@@ -191,7 +201,10 @@
 </code></pre>
 	</section>
 	<section>
-		<header><h3>Complex action:</h3></header>
+		<header>
+            <h3>Complex action:</h3>
+            <a href="https://svelte.dev/repl/38ee0361bb904d448414959077829f0a?version=3.58.0">REPL</a>
+        </header>
 
 		<pre><code class="language-html"
 				>&lt;script lang="ts" context="module"&gt;
@@ -229,7 +242,7 @@
 		coords.set(&lcub; x: 0, y: 0 &rcub;);
 	&rcub;
 
-	import m, &lcub; on, use &rcub; from '$lib';
+	import m, &lcub; on, use &rcub; from 'svelte-micro-components';
 
 	const Box = m`
 		&lt;div class="box"
@@ -253,11 +266,14 @@
 </code></pre>
 	</section>
 	<section>
-		<header><h3>Slots:</h3></header>
+		<header>
+            <h3>Slots:</h3>
+            <a href="https://svelte.dev/repl/848b525661094ac7b45e6a5f3d1206a5?version=3.58.0">REPL</a>
+        </header>
 
 		<pre><code class="language-html"
 				>&lt;script&gt;
-	import m, &lcub; slot &rcub; from '$lib';
+	import m, &lcub; slot &rcub; from 'svelte-micro-components';
 
 	const Box = m`
 		&lt;div class="box"&gt;
@@ -273,11 +289,14 @@
 </code></pre>
 	</section>
 	<section>
-		<header><h3>Named slots:</h3></header>
+		<header>
+            <h3>Named slots:</h3>
+            <a href="https://svelte.dev/repl/b18dfb2c26c641c8b861b61a28fce7a4?version=3.58.0">REPL</a>
+        </header>
 
 		<pre><code class="language-html"
 				>&lt;script&gt;
-	import m, &lcub; slot &rcub; from '$lib';
+	import m, &lcub; slot &rcub; from 'svelte-micro-components';
 
 	const ContactCard = m`
 		&lt;article class="contact-card"&gt;
@@ -306,4 +325,71 @@
 &lt;/ContactCard&gt;
 </code></pre>
 	</section>
+    <section>
+        <header>
+            <h3>Modal:</h3>
+            <a href="https://svelte.dev/repl/4cb5fb9f668e423cb770e700b9109ef9?version=3.58.0">REPL</a>
+        </header>
+
+        <pre><code class="language-html"
+                >&lt;script&gt;
+    let showModal = false;
+    
+    function dialogShow(node) &lcub;
+        return &lcub;
+            update(showModal) &lcub;
+                if (showModal) node.showModal();
+                else node.close();
+            &rcub;
+        &rcub;
+    &rcub;
+    
+    import m, &lcub; slot, on, use &rcub; from "svelte-micro-components";
+    
+    const Modal = m`
+        &lt;dialog
+            $&lcub;on`$&lcub;"close"&rcub;`&rcub;
+            $&lcub;on`$&lcub;"click"&rcub;`&rcub;
+            $&lcub;use`$&lcub;dialogShow&rcub;=$&lcub;"showmodal"&rcub;`&rcub;
+        &gt;
+            &lt;div $&lcub;on`$&lcub;"click"&rcub;=$&lcub;'divClick'&rcub;`&rcub;&gt;
+                $&lcub;slot("header")&rcub;
+                &lt;hr /&gt;
+                $&lcub;slot()&rcub;
+                &lt;hr /&gt;
+                &lt;!-- svelte-ignore a11y-autofocus --&gt;
+                &lt;button autofocus $&lcub;on`$&lcub;"click"&rcub;`&rcub;&gt;close modal&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/dialog&gt;
+    `;
+    
+    function hide() &lcub; showModal = false &rcub;
+    function show() &lcub; showModal = true &rcub;
+    function stopPropagation(e) &lcub; e.stopPropagation(); &rcub;
+&lt;/script&gt;
+
+&lt;button on:click=&lcub;show&rcub;&gt;
+    show modal
+&lt;/button&gt;
+
+&lt;Modal on:close=&lcub;hide&rcub; on:click=&lcub;hide&rcub; on:divClick=&lcub;stopPropagation&rcub; showmodal=&lcub;showModal&rcub;&gt;
+    &lt;h2 slot="header"&gt;
+        modal
+        &lt;small&gt;&lt;em&gt;adjective&lt;/em&gt; mod·al \ˈmō-dəl\&lt;/small&gt;
+    &lt;/h2&gt;
+
+    &lt;ol class="definition-list"&gt;
+        &lt;li&gt;of or relating to modality in logic&lt;/li&gt;
+        &lt;li&gt;
+            containing provisions as to the mode of procedure or the manner of taking effect —used of a contract or legacy
+        &lt;/li&gt;
+        &lt;li&gt;of or relating to a musical mode&lt;/li&gt;
+        &lt;li&gt;of or relating to structure as opposed to substance&lt;/li&gt;
+        &lt;li&gt;of, relating to, or constituting a grammatical form or category characteristically indicating predication&lt;/li&gt;
+        &lt;li&gt;of or relating to a statistical mode&lt;/li&gt;
+    &lt;/ol&gt;
+
+    &lt;a href="https://www.merriam-webster.com/dictionary/modal"&gt;merriam-webster.com&lt;/a&gt;
+&lt;/Modal&gt;</code></pre>
+    </section>
 </main>
