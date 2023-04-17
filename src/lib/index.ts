@@ -246,7 +246,10 @@ export default function micro_component<Props extends readonly Prop[]>(
 
 		const components: [InlineComponent, InstanceType<typeof SvelteComponentTyped>][] = Array.from(
 			categorized.o
-		).map((propName) => [propName, new (propName[1] as any)({ props: getProps(propName, props) })]);
+		).map((propName) => [
+			propName,
+			new (propName[1] as any)({ $$inline: true, props: getProps(propName, props) })
+		]);
 
 		return {
 			c() {
