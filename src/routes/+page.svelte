@@ -29,7 +29,7 @@
 	<section style="text-align: center">
 		<header>
 			<h3>Basic text interpolation:</h3>
-            <a href="https://svelte.dev/repl/5c837032b30e4322857d2ba9820baccb?version=3.58.0">REPL</a>
+			<a href="https://svelte.dev/repl/5c837032b30e4322857d2ba9820baccb?version=3.58.0">REPL</a>
 		</header>
 
 		<pre><code class="language-html"
@@ -45,9 +45,9 @@
 
 	<section>
 		<header>
-            <h3>Dynamic attributes:</h3>
-            <a href="https://svelte.dev/repl/13e16447f48045f89af04b10a58a0974?version=3.58.0">REPL</a>
-        </header>
+			<h3>Dynamic attributes:</h3>
+			<a href="https://svelte.dev/repl/13e16447f48045f89af04b10a58a0974?version=3.58.0">REPL</a>
+		</header>
 
 		<pre><code class="language-html"
 				>&lt;script lang="ts"&gt;
@@ -64,9 +64,9 @@
 	</section>
 	<section>
 		<header>
-            <h3>DOM Events:</h3>
-            <a href="https://svelte.dev/repl/90aae0da3ab349efbc25a9ed7910559e?version=3.58.0">REPL</a>
-        </header>
+			<h3>DOM Events:</h3>
+			<a href="https://svelte.dev/repl/90aae0da3ab349efbc25a9ed7910559e?version=3.58.0">REPL</a>
+		</header>
 
 		<pre><code class="language-html"
 				>&lt;script lang="ts"&gt;
@@ -91,9 +91,9 @@
 	</section>
 	<section>
 		<header>
-            <h3>Event forwarding:</h3>
-            <a href="https://svelte.dev/repl/8c29f13eff8e4d70b98ee8dd5db0c411?version=3.58.0">REPL</a>
-        </header>
+			<h3>Event forwarding:</h3>
+			<a href="https://svelte.dev/repl/8c29f13eff8e4d70b98ee8dd5db0c411?version=3.58.0">REPL</a>
+		</header>
 
 		<pre><code class="language-html"
 				>&lt;script lang="ts"&gt;
@@ -118,9 +118,9 @@
 	</section>
 	<section>
 		<header>
-            <h3>Basic action:</h3>
-            <a href="https://svelte.dev/repl/39570d0aa2e7433893d25bba2a524b09?version=3.58.0">REPL</a>
-        </header>
+			<h3>Basic action:</h3>
+			<a href="https://svelte.dev/repl/39570d0aa2e7433893d25bba2a524b09?version=3.58.0">REPL</a>
+		</header>
 
 		<pre><code class="language-html"
 				>&lt;script context="module" lang="ts"&gt;
@@ -155,7 +155,7 @@
 	<section>
 		<header>
 			<h3>Parameterized action:</h3>
-            <a href="https://svelte.dev/repl/05bbcba99418486692a7979b3d88e206?version=3.58.0">REPL</a>
+			<a href="https://svelte.dev/repl/05bbcba99418486692a7979b3d88e206?version=3.58.0">REPL</a>
 		</header>
 
 		<pre><code class="language-html"
@@ -202,9 +202,9 @@
 	</section>
 	<section>
 		<header>
-            <h3>Complex action:</h3>
-            <a href="https://svelte.dev/repl/38ee0361bb904d448414959077829f0a?version=3.58.0">REPL</a>
-        </header>
+			<h3>Complex action:</h3>
+			<a href="https://svelte.dev/repl/38ee0361bb904d448414959077829f0a?version=3.58.0">REPL</a>
+		</header>
 
 		<pre><code class="language-html"
 				>&lt;script lang="ts" context="module"&gt;
@@ -267,9 +267,9 @@
 	</section>
 	<section>
 		<header>
-            <h3>Slots:</h3>
-            <a href="https://svelte.dev/repl/848b525661094ac7b45e6a5f3d1206a5?version=3.58.0">REPL</a>
-        </header>
+			<h3>Slots:</h3>
+			<a href="https://svelte.dev/repl/848b525661094ac7b45e6a5f3d1206a5?version=3.58.0">REPL</a>
+		</header>
 
 		<pre><code class="language-html"
 				>&lt;script&gt;
@@ -290,9 +290,9 @@
 	</section>
 	<section>
 		<header>
-            <h3>Named slots:</h3>
-            <a href="https://svelte.dev/repl/b18dfb2c26c641c8b861b61a28fce7a4?version=3.58.0">REPL</a>
-        </header>
+			<h3>Named slots:</h3>
+			<a href="https://svelte.dev/repl/b18dfb2c26c641c8b861b61a28fce7a4?version=3.58.0">REPL</a>
+		</header>
 
 		<pre><code class="language-html"
 				>&lt;script&gt;
@@ -325,14 +325,14 @@
 &lt;/ContactCard&gt;
 </code></pre>
 	</section>
-    <section>
-        <header>
-            <h3>Modal:</h3>
-            <a href="https://svelte.dev/repl/4cb5fb9f668e423cb770e700b9109ef9?version=3.58.0">REPL</a>
-        </header>
+	<section>
+		<header>
+			<h3>Modal:</h3>
+			<a href="https://svelte.dev/repl/4cb5fb9f668e423cb770e700b9109ef9?version=3.58.0">REPL</a>
+		</header>
 
-        <pre><code class="language-html"
-                >&lt;script&gt;
+		<pre><code class="language-html"
+				>&lt;script&gt;
     let showModal = false;
     
     function dialogShow(node) &lcub;
@@ -390,6 +390,7 @@
     &lt;/ol&gt;
 
     &lt;a href="https://www.merriam-webster.com/dictionary/modal"&gt;merriam-webster.com&lt;/a&gt;
-&lt;/Modal&gt;</code></pre>
-    </section>
+&lt;/Modal&gt;</code
+			></pre>
+	</section>
 </main>

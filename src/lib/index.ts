@@ -94,23 +94,27 @@ export function slot<T extends string>(name?: T): Slot<T> {
 export function component<
 	ComponentProps extends Record<string, unknown>,
 	ComponentEvents extends Record<string, unknown>,
-	ComponentSlots extends Record<string, unknown>
+	ComponentSlots extends Record<string, unknown>,
+	PropAlias extends string
 >(
 	{ raw: strings }: TemplateStringsArray,
 	Component: typeof SvelteComponentTyped<ComponentProps, ComponentEvents, ComponentSlots>,
-	...props: string[]
-): InlineComponent<typeof Component> {
-	throw new Error("This doesn't work");
+	...props: PropAlias[]
+): InlineComponent<typeof Component, Record<PropAlias, keyof ComponentProps>> {
 	const map = Object.fromEntries(
-		props.map((prop, i) => [strings[i + 1].split('=')[0].trim(), prop])
-	) as Record<keyof ComponentProps, string>;
+		props.map((prop, i) => [prop, strings[i + 1].split('=')[0].trim()])
+	) as Record<string, keyof ComponentProps>;
 
 	return [COMPONENT, Component, map];
 }
 
 function getProps(comp: InlineComponent, props: Record<string, unknown>) {
-	let keys = Object.values(comp[2]);
-	return Object.fromEntries(Object.entries(props).filter((x) => x[0] in keys));
+	const keys = Object.keys(comp[2]);
+	return Object.fromEntries(
+		Object.entries(props)
+			.filter((x) => keys.includes(x[0]))
+			.map(([key, value]) => [comp[2][key], value])
+	);
 }
 
 export default function micro_component<Props extends readonly Prop[]>(
@@ -174,7 +178,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 				categorized.c.add(propName);
 			} else if (propName[0] === COMPONENT) {
 				categorized.o.add(propName);
-				Object.values(propName[2]).forEach((e) => categorized.p.add(e));
+				Object.keys(propName[2]).forEach((e) => categorized.p.add(e));
 			}
 		} else {
 			if (strings[i].at(-1) === '=') {
@@ -259,6 +263,8 @@ export default function micro_component<Props extends readonly Prop[]>(
 					this.c();
 				}
 
+				nodes.forEach((node) => insert(target, node, anchor));
+
 				const parent = nodes[0].parentNode as ParentNode;
 				for (const propName of categorized.t) {
 					(parent.querySelector(`text-${propName}`) as Element).replaceWith(values[propName]);
@@ -273,8 +279,8 @@ export default function micro_component<Props extends readonly Prop[]>(
 					slot[1].m(placeholder.parentElement as HTMLElement, placeholder);
 					detach(placeholder);
 				}
-				for (const component of categorized.o) {
-					const placeholder = parent.querySelector(`component-${component[1].name}`) as Element;
+				for (const component of components) {
+					const placeholder = parent.querySelector(`component-${component[0][1].name}`) as Element;
 					mount_component(
 						component[1],
 						placeholder.parentElement as HTMLElement,
@@ -303,9 +309,6 @@ export default function micro_component<Props extends readonly Prop[]>(
 					}
 					mounted = true;
 				}
-
-				// note: can insert all with Template.content, but then can't access nodes after insertion
-				nodes.forEach((node) => insert(target, node, anchor));
 
 				current = true;
 			},
@@ -385,8 +388,9 @@ export default function micro_component<Props extends readonly Prop[]>(
 			for (const prop in props) {
 				if (prop in values) values[prop].nodeValue = props[prop];
 				if (prop in actions) actions[prop](props[prop]);
-				if (prop in categorized.p) $$component_changes[prop] = props[prop];
+				if (categorized.p.has(prop)) $$component_changes[prop] = props[prop];
 			}
+			if (!is_empty($$component_changes)) invalidate(6, $$component_changes);
 		};
 
 		return [

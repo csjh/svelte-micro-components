@@ -101,8 +101,21 @@ export type InlineComponent<
 		Record<string, unknown>,
 		Record<string, unknown>,
 		Record<string, unknown>
+	>,
+	Props extends Record<string, keyof InstanceType<Component>['$$prop_def']> = Record<
+		string,
+		keyof InstanceType<Component>['$$prop_def']
 	>
-> = [COMPONENT, Component, Record<keyof InstanceType<Component>['$$prop_def'], string>];
+> = [COMPONENT, Component, Props];
+
+type ExtractInlineProps<T extends readonly Prop[]> = Extract<
+	T[number],
+	InlineComponent
+> extends never
+	? Record<string, never>
+	: Extract<T[number], InlineComponent> extends InlineComponent<infer Component, infer Props>
+	? { [K in keyof Props]: InstanceType<Component>['$$prop_def'][Props[K]] }
+	: Record<string, never>;
 
 // utility type
 type CheckIfBothRecordStringNever<T1, T2, Fallback> = T1 extends Record<string, never>
@@ -112,9 +125,14 @@ type CheckIfBothRecordStringNever<T1, T2, Fallback> = T1 extends Record<string, 
 	: T2 extends Record<string, never>
 	? { [K in keyof T1]: T1[K] }
 	: { [K in keyof T1 | keyof T2]: K extends keyof T1 ? T1[K] : K extends keyof T2 ? T2[K] : never };
+type CheckThree<T1, T2, T3, Fallback> = CheckIfBothRecordStringNever<
+	CheckIfBothRecordStringNever<T1, T2, Record<string, never>>,
+	T3,
+	Fallback
+>;
 
 export declare class MicroComponent<T extends readonly Prop[]> extends SvelteComponentTyped<
-	CheckIfBothRecordStringNever<ExtractProps<T>, ExtractUseProps<T>, Record<string, never>>,
+	CheckThree<ExtractProps<T>, ExtractUseProps<T>, ExtractInlineProps<T>, Record<string, never>>,
 	CheckIfBothRecordStringNever<ExtractEvents<T>, ExtractUseEvents<T>, Record<never, never>>,
 	ExtractSlots<T>
 > {}
