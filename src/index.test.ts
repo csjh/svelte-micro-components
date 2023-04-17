@@ -10,7 +10,7 @@ describe('types testing', () => {
 		const Component = m`<div class=${'hello'} />`;
 		type Props = InstanceType<typeof Component>['$$prop_def'];
 
-        let props: Props;
+		let props: Props;
 		// should be fine with hello
 		props = { hello: 'bye' };
 		// @ts-expect-error shouldn't allow any props other than hello
@@ -23,7 +23,7 @@ describe('types testing', () => {
 		const NoPropsComponent = m`<div />`;
 		type NoProps = InstanceType<typeof NoPropsComponent>['$$prop_def'];
 
-        let noProps: NoProps;
+		let noProps: NoProps;
 		// shouldn't need any props
 		noProps = {};
 		// @ts-expect-error should not allow any props
@@ -35,7 +35,7 @@ describe('types testing', () => {
 		const Component = m`<div ${use`${action}=${'prop'}`} />`;
 		type Props = InstanceType<typeof Component>['$$prop_def'];
 
-        let props: Props;
+		let props: Props;
 		// should be fine with prop
 		props = { prop: { foo: 'bar' } };
 		// @ts-expect-error shouldn't allow any props other than prop
@@ -46,7 +46,7 @@ describe('types testing', () => {
 		const NoPropsComponent = m`<div ${use`${emptyAction}`} />`;
 		type NoProps = InstanceType<typeof NoPropsComponent>['$$prop_def'];
 
-        let noProps: NoProps;
+		let noProps: NoProps;
 		// shouldn't need any props
 		noProps = {};
 		// @ts-expect-error should not allow any props
@@ -55,7 +55,7 @@ describe('types testing', () => {
 		const BothPropsComponent = m`<div ${use`${action}=${'prop'}`} ${use`${emptyAction}`}>${'hello'}</div>`;
 		type BothProps = InstanceType<typeof BothPropsComponent>['$$prop_def'];
 
-        let bothProps: BothProps;
+		let bothProps: BothProps;
 		// should be fine with prop and hello
 		bothProps = { prop: { foo: 'bar' }, hello: 'world' };
 		// @ts-expect-error shouldn't allow one of them missing
