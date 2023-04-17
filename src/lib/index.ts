@@ -10,7 +10,7 @@ import {
 	destroy_component,
 	children,
 	attr,
-    is_empty,
+	is_empty,
 	listen,
 	run_all,
 	safe_not_equal,
@@ -100,6 +100,7 @@ export function component<
 	Component: typeof SvelteComponentTyped<ComponentProps, ComponentEvents, ComponentSlots>,
 	...props: string[]
 ): InlineComponent<typeof Component> {
+	throw new Error("This doesn't work");
 	const map = Object.fromEntries(
 		props.map((prop, i) => [strings[i + 1].split('=')[0].trim(), prop])
 	) as Record<keyof ComponentProps, string>;
@@ -173,7 +174,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 				categorized.c.add(propName);
 			} else if (propName[0] === COMPONENT) {
 				categorized.o.add(propName);
-				Object.values(propName[2]).forEach(categorized.p.add);
+				Object.values(propName[2]).forEach((e) => categorized.p.add(e));
 			}
 		} else {
 			if (strings[i].at(-1) === '=') {
@@ -319,7 +320,7 @@ export default function micro_component<Props extends readonly Prop[]>(
 					let props = getProps(component, $$component_changes);
 					if (!is_empty(props)) {
 						instance.$set(props);
-                        Object.keys(props).forEach((key) => delete $$component_changes[key]);
+						Object.keys(props).forEach((key) => delete $$component_changes[key]);
 					}
 				}
 				slots.forEach(([_, slot, definition]) => {

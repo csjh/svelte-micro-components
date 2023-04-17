@@ -97,7 +97,11 @@ export type InlineComponent<
 		Record<string, unknown>,
 		Record<string, unknown>,
 		Record<string, unknown>
-	> = typeof SvelteComponentTyped<Record<string, unknown>, Record<string, unknown>, Record<string, unknown>>,
+	> = typeof SvelteComponentTyped<
+		Record<string, unknown>,
+		Record<string, unknown>,
+		Record<string, unknown>
+	>
 > = [COMPONENT, Component, Record<keyof InstanceType<Component>['$$prop_def'], string>];
 
 // utility type

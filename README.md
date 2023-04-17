@@ -78,10 +78,10 @@ DOM events:
 	import m, { on } from '$lib';
 
 	const Tracker = m`
-        <div ${on`${'mousemove'}`}>
-            The mouse position is ${'x'} x ${'y'}
-        </div>
-    `;
+		<div ${on`${'mousemove'}`}>
+			The mouse position is ${'x'} x ${'y'}
+		</div>
+	`;
 </script>
 
 <Tracker x={pos.x} y={pos.y} on:mousemove={handleMousemove} />
@@ -101,10 +101,10 @@ Event forwarding:
 	import m, { on } from '$lib';
 
 	const Tracker = m`
-        <div ${on`${'mousemove'}=${'moved'}`}>
-            The mouse position is ${'x'} x ${'y'}
-        </div>
-    `;
+		<div ${on`${'mousemove'}=${'moved'}`}>
+			The mouse position is ${'x'} x ${'y'}
+		</div>
+	`;
 </script>
 
 <Tracker x={pos.x} y={pos.y} on:moved={handleMousemove} />
@@ -131,10 +131,10 @@ Basic action:
 	import m, { on, use } from '$lib';
 
 	const Box = m`
-        <div ${use`${changeColor}=${'color'}`} ${on`${'click'}`}>
-            I start off as red, but when you click me I turn green.
-        </div>
-    `;
+		<div ${use`${changeColor}=${'color'}`} ${on`${'click'}`}>
+			I start off as red, but when you click me I turn green.
+		</div>
+	`;
 
 	let color = 'rgb(255, 0, 0)';
 </script>
@@ -161,17 +161,17 @@ Parameterized action (longpress from [this official example](https://svelte.dev/
 	let pressed = false;
 	let duration = 2000;
 
-	const Button = m`<button
-        ${use`${longpress}=${'duration'}`}
-        ${on`${'longpress'}`}
-        ${on`${'mouseenter'}`}
-    >
-        press and hold
-    </button>`;
+	const Button = m`
+        <button
+            ${use`${longpress}=${'duration'}`}
+            ${on`${'longpress'}`}
+            ${on`${'mouseenter'}`}
+        >
+            press and hold
+        </button>
+    `;
 
-	const Message = m`<p>
-        congratulations, you pressed and held for ${'duration'}ms
-    </p>`;
+	const Message = m`<p>congratulations, you pressed and held for ${'duration'}ms</p>`;
 </script>
 
 <label>
@@ -227,14 +227,14 @@ Complex action:
 	import m, { on, use } from '$lib';
 
 	const Box = m`
-        <div class="box"
-            ${use`${pannable}`}
-            ${on`${'panstart'}`}
-            ${on`${'panmove'}`}
-            ${on`${'panend'}`}
-            style=${'style'}
-        ></div>
-    `;
+		<div class="box"
+			${use`${pannable}`}
+			${on`${'panstart'}`}
+			${on`${'panmove'}`}
+			${on`${'panend'}`}
+			style=${'style'}
+		></div>
+	`;
 </script>
 
 <Box
@@ -254,10 +254,10 @@ Slots:
 	import m, { slot } from '$lib';
 
 	const Box = m`
-        <div class="box">
-            ${slot()}
-        </div>
-    `;
+		<div class="box">
+			${slot()}
+		</div>
+	`;
 </script>
 
 <Box>
@@ -272,19 +272,21 @@ Named slots:
 <script>
 	import m, { slot } from '$lib';
 
-	const ContactCard = m`<article class="contact-card">
-        <h2>
-            ${slot('name')}
-        </h2>
+	const ContactCard = m`
+        <article class="contact-card">
+            <h2>
+                ${slot('name')}
+            </h2>
 
-        <div class="address">
-            ${slot('address')}
-        </div>
+            <div class="address">
+                ${slot('address')}
+            </div>
 
-        <div class="email">
-            ${slot('email')}
-        </div>
-    </article>`;
+            <div class="email">
+                ${slot('email')}
+            </div>
+        </article>
+    `;
 </script>
 
 <ContactCard>
