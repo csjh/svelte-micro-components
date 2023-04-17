@@ -3,7 +3,7 @@ import type { Action } from 'svelte/action';
 import type { SvelteComponentTyped } from 'svelte';
 import type { SLOT, ON, USE, COMPONENT } from '$lib';
 
-export type NonProp = OnDirective | UseDirective | Slot;
+export type NonProp = OnDirective | UseDirective | Slot | InlineComponent;
 export type Prop = string | NonProp;
 export type ValidateProps<T extends readonly Prop[]> = {
 	[K in keyof T]: T[K] extends OnDirective<string, infer Alias>
@@ -90,6 +90,15 @@ type AllowUnion<T> = T extends UseDirective<
 		? never
 		: GetEvents<Attributes>
 	: never;
+
+// COMPONENT directive-ish types
+export type InlineComponent<
+	Component extends typeof SvelteComponentTyped<
+		Record<string, unknown>,
+		Record<string, unknown>,
+		Record<string, unknown>
+	> = typeof SvelteComponentTyped<Record<string, unknown>, Record<string, unknown>, Record<string, unknown>>,
+> = [COMPONENT, Component, Record<keyof InstanceType<Component>['$$prop_def'], string>];
 
 // utility type
 type CheckIfBothRecordStringNever<T1, T2, Fallback> = T1 extends Record<string, never>
